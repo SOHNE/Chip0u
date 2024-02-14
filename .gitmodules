@@ -1,0 +1,6 @@
+[submodule "vendor/raylib"]
+	path = vendor/raylib
+	url = https://github.com/raysan5/raylib
+[submodule "vendor/ImGuiFileDialog"]
+	path = vendor/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog.git
