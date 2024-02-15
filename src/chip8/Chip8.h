@@ -65,6 +65,14 @@ public:
         bool        DF;                // Draw Flag
     } chip8_t;
 
+    /*
+    typedef struct debug_t
+    {
+        // PC breakpoint
+        uint16_t    PC;
+    } debug_t;
+    */
+
 public:
     Chip8();
     ~Chip8() = default;
@@ -74,6 +82,9 @@ public:
     void LoadGame(const char* filename);
 
     void SetKey(uint8_t key, bool state);
+
+    //void AddBreakpoint(uint16_t PC);
+    //void RemoveBreakpoint(uint16_t PC);
 
     // Getters
     bool       GetDrawFlag();
@@ -100,6 +111,9 @@ private:
 
     // Lookup table for instructions
     std::map<uint16_t, instruction_map_t> m_lookup;
+
+    // vector of all breakpoints
+    //std::vector<debug_t> m_breakpoints;
 
     // Instructions
     void OP_00E0(), OP_00EE(), OP_1NNN(), OP_2NNN(), OP_3XNN(), OP_4XNN(), OP_5XY0(), OP_6XNN(), OP_7XNN();
