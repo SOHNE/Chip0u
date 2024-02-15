@@ -24,7 +24,7 @@ set_target_properties(Chip0u PROPERTIES
 set(ROMS_DIR ${CMAKE_SOURCE_DIR}/roms)
 if( EMSCRIPTEN )
     if (EXISTS ${ROMS_DIR})
-        set_target_properties(Chip0u PROPERTIES LINK_FLAGS "-s DEMANGLE_SUPPORT=1 --preload-file ${ROMS_DIR} --bind --use-preload-plugins")
+        set_target_properties(Chip0u PROPERTIES LINK_FLAGS "-s DEMANGLE_SUPPORT=1 --preload-file ${ROMS_DIR}@/roms --bind --use-preload-plugins")
     else()
         message(WARNING "No roms folder found. Please add a roms folder to the root of the project.")
     endif ()
