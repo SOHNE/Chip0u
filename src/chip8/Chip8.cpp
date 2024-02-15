@@ -507,19 +507,19 @@ void Chip8::OP_FX65()
 uint16_t
 Chip8::GetMaskedOpcode(uint16_t opcode) const
 {
-    uint16_t masked_opcode = m_instr.OP & 0xF000;
+    uint16_t masked_opcode = opcode & 0xF000;
     switch (masked_opcode)
     {
         case 0x0000:
-            masked_opcode = m_instr.OP & 0x00FF;
+            masked_opcode = opcode & 0x00FF;
             break;
         case 0x8000:
         case 0x9000:
-            masked_opcode = m_instr.OP & 0xF00F;
+            masked_opcode = opcode & 0xF00F;
             break;
         case 0xE000:
         case 0xF000:
-            masked_opcode = m_instr.OP & 0xF0FF;
+            masked_opcode = opcode & 0xF0FF;
             break;
         default:
             break;
@@ -604,7 +604,7 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
         }
         else
         {
-            sInst += "BAD OPCODE XXX";
+            sInst += "XXX";
         }
 
         sInst += std::string(21 - sInst.size(), ' ') + "// 0x" + hex(nOp, 4);
