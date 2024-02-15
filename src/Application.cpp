@@ -179,9 +179,9 @@ Application::DrawToolbarUI()
             m_isPaused = true;
 
             IGFD::FileDialogConfig config;
-            config.path = ".";
+            config.path = "./roms";
             config.flags = ImGuiFileDialogFlags_Modal;
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".ch8,.rom", config);
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose a ROM", ".ch8,.rom", config);
         }
 
         ImVec2 maxSize = ImVec2(m_displayWidth, m_displayHeight);
