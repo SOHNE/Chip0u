@@ -614,8 +614,7 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
 
             if (it->second.function == &Chip8::OP_00E0 || it->second.function == &Chip8::OP_00EE)
             {
-                mapLines[line_addr] = sInst;
-                continue;
+                // No additional info
             }
             else if (it->second.function == &Chip8::OP_1NNN || it->second.function == &Chip8::OP_2NNN || it->second.function == &Chip8::OP_ANNN || it->second.function == &Chip8::OP_BNNN)
             {
