@@ -5,15 +5,17 @@
 #endif
 
 void
-AppLoop(void* arg) {
-    Application& app = *reinterpret_cast<Application*>(arg);
+AppLoop(void* arg)
+{
+    Application &app = *reinterpret_cast<Application*>(arg);
 
-    if (!app.IsRunning()) {
 #if __EMSCRIPTEN__
+    if (!app.IsRunning())
+    {
         emscripten_cancel_main_loop();
-#endif
         return;
     }
+#endif
 
     app.Input();
     app.Update();
@@ -33,7 +35,8 @@ main(int argc, char* argv[])
 #if __EMSCRIPTEN__
     emscripten_set_main_loop_arg(AppLoop, &app, 0, 1);
 #else
-    while (app.IsRunning()) {
+    while (app.IsRunning())
+    {
         AppLoop(&app);
     }
 #endif
