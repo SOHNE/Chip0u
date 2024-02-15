@@ -43,6 +43,8 @@ Application::Setup()
     IMGUI_CHECKVERSION();
     rlImGuiSetup(true);
     m_io = &ImGui::GetIO();
+
+    ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".ch8", ImVec4(0.0f, 1.0f, 0.5f, 0.9f), "[CH8]");
 }
 
 void
@@ -180,7 +182,9 @@ Application::DrawToolbarUI()
             ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".ch8,.rom", config);
         }
 
-        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+        ImVec2 maxSize = ImVec2(m_displayWidth, m_displayHeight);
+        ImVec2 minSize = ImVec2(m_displayWidth * 0.75f, m_displayHeight * 0.75f);
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, minSize, maxSize))
         {
             if (ImGuiFileDialog::Instance()->IsOk())
             { // action if OK
