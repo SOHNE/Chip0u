@@ -442,17 +442,6 @@ Application::DrawDebugUI()
                 ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("Stack"))
-            {
-                auto stack = m_chip8->GetStack();
-                for (int i = 0; i < 16; ++i)
-                {
-                    std::string s = "0x" + hex(i, 1) + ": 0x" + hex(stack[i], 3);
-                    ImGui::Selectable(s.c_str());
-                }
-                ImGui::EndTabItem();
-            }
-
             if (ImGui::BeginTabItem("Input"))
             {
                 auto keys = m_chip8->GetKeyboard();
