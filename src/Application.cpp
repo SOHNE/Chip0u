@@ -387,7 +387,8 @@ Application::DrawDebugUI()
     ImGui::Begin("V0~VF", nullptr, debugWindowFlags);
         for (int i = 0; i < 16; ++i)
         {
-            ImGui::Text("V%X: 0x%s [%d]", i, hex(m_chip8->GetV()[i], 2).c_str(), m_chip8->GetV()[i]);
+            uint8_t v = m_chip8->GetV()[i];
+            ImGui::Text("V%X: 0x%s [%d]", i, hex(v, 2).c_str(), v);
         }
     ImGui::End();
 
