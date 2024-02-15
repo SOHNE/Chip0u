@@ -37,7 +37,7 @@ Application::LoadFile(const char *filename)
 void
 Application::Setup()
 {
-    LoadFile("roms/s.ch8");
+    LoadFile("roms/TEST.ch8");
 
     // Imgui
     IMGUI_CHECKVERSION();
@@ -102,16 +102,13 @@ void Application::Render()
     if (m_showLines)
     {
         Color color = Fade(m_themes[m_isLightTheme].fg, 0.25f);
-        for (int i = 0; i < 64; ++i)
+        for (uint16_t i = 0; i < 64; ++i)
         {
-            // Add an offset to the y-coordinate to account for the toolbar height
+            if (i < 32)
+            {
+                DrawLine(0, i * 10 + 20, 64 * 10, i * 10 + 20, color);
+            }
             DrawLine(i * 10, 0 + 20, i * 10, 32 * 10 + 20, color);
-        }
-
-        for (int i = 0; i < 32; ++i)
-        {
-            // Add an offset to the y-coordinate to account for the toolbar height
-            DrawLine(0, i * 10 + 20, 64 * 10, i * 10 + 20, color);
         }
     }
 
@@ -363,11 +360,11 @@ Application::DrawDebugUI()
     ImGui::SetNextWindowPos(ImVec2(64 * 10, 70), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.4F, 120), ImGuiCond_Always);
     ImGui::Begin("Registers", nullptr, debugWindowFlags);
-        ImGui::Text("PC: 0x%s [%d]", hex(m_chip8->GetPC(), 3).c_str(), m_chip8->GetPC());
-        ImGui::Text("I: 0x%s [%d]", hex(m_chip8->GetI(), 3).c_str(), m_chip8->GetI());
-        ImGui::Text("SP: 0x%s [%d]", hex(m_chip8->GetSP(), 1).c_str(), m_chip8->GetSP());
-        ImGui::Text("DT: 0x%s [%d]", hex(m_chip8->GetDelayTimer(), 1).c_str(), m_chip8->GetDelayTimer());
-        ImGui::Text("ST: 0x%s [%d]", hex(m_chip8->GetSoundTimer(), 1).c_str(), m_chip8->GetSoundTimer());
+        ImGui::Text("PC: 0x%s\t[%d]", hex(m_chip8->GetPC(), 3).c_str(), m_chip8->GetPC());
+        ImGui::Text("I : 0x%s\t[%d]", hex(m_chip8->GetI(), 3).c_str(), m_chip8->GetI());
+        ImGui::Text("SP: 0x%s\t[%d]", hex(m_chip8->GetSP(), 1).c_str(), m_chip8->GetSP());
+        ImGui::Text("DT: 0x%s\t[%d]", hex(m_chip8->GetDelayTimer(), 1).c_str(), m_chip8->GetDelayTimer());
+        ImGui::Text("ST: 0x%s\t[%d]", hex(m_chip8->GetSoundTimer(), 1).c_str(), m_chip8->GetSoundTimer());
     ImGui::End();
 
     // Stack on left side of the registers
