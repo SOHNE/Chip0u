@@ -588,6 +588,7 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
     uint16_t line_addr = 0;
     std::string sInst{};
 
+    // By David Barr, aka javidx9
     auto hex = [](uint32_t n, uint8_t d)
     {
         std::string s(d, '0');
@@ -596,20 +597,13 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
         return s;
     };
 
-    // Starting at the specified address we read an instruction
-    // byte, which in turn yields information from the lookup table
-    // as to how many additional bytes we need to read and what the
-    // addressing mode is. I need this info to assemble human readable
-    // syntax, which is different depending upon the addressing mode
-
-    // As the instruction is decoded, a std::string is assembled
-    // with the readable output
+    // Mounts a human-readable version of the program
     while (addr <= nStop)
     {
         line_addr = addr;
 
         sInst = "";
-        uint16_t nOp = m_c8.RAM[addr] << 8 | m_c8.RAM[addr + 1]; addr++;
+        uint16_t nOp = m_c8.RAM[addr] << 8 | m_c8.RAM[addr + 1]; addr+=2;
         uint16_t masked_opcode = GetMaskedOpcode(nOp);
 
         auto it = m_lookup.find(masked_opcode);
