@@ -49,38 +49,7 @@ void Chip8::Initialize()
         {0xF007, {"LD", &c8::OP_FX07}}, {0xF00A, {"LD", &c8::OP_FX0A}}, {0xF015, {"LD", &c8::OP_FX15}}, {0xF018, {"LD", &c8::OP_FX18}}, {0xF01E, {"ADD", &c8::OP_FX1E}}, {0xF029, {"LD", &c8::OP_FX29}}, {0xF033, {"LD", &c8::OP_FX33}}, {0xF055, {"LD", &c8::OP_FX55}}, {0xF065, {"LD", &c8::OP_FX65}}
     };
 
-    // Initialize registers and memory once
-    m_c8.PC     = PROG_START; // Program counter starts at 0x200
-    m_c8.I      = 0;     // Reset index register
-    m_c8.SP     = 0;     // Reset stack pointer
-    m_instr     = {0};   // Reset current opcode
-
-    // Clear display memory
-    memset(m_c8.DP, 0, sizeof(m_c8.DP));
-
-    // Clear stack memory
-    memset(m_c8.STACK, 0, sizeof(m_c8.STACK));
-
-    // Clear register memory
-    memset(m_c8.V, 0, sizeof(m_c8.V));
-
-    // Clear memory
-    memset(m_c8.RAM, 0, sizeof(m_c8.RAM));
-
-    // Clear keypad memory
-    memset(m_c8.KP, 0, sizeof(m_c8.KP));
-
-    // Load fontset
-    {
-        // Load fontset into memory
-        for (int i = 0; i < 16 * 5; ++i) m_c8.RAM[i] = FONT_SET[i];
-    }
-
-    // Reset timers
-    m_c8.DT = 0; m_c8.ST = 0;
-
-    // Clear display
-    m_c8.DF = true;
+    Reset();
 }
 
 void Chip8::LoadGame(const char* filename)
@@ -172,6 +141,43 @@ void Chip8::Clock()
         if (m_c8.ST == 1) printf("BEEP!\n");
         --m_c8.ST;
     }
+}
+
+void
+Chip8::Reset()
+{
+    // Initialize registers and memory once
+    m_c8.PC     = PROG_START; // Program counter starts at 0x200
+    m_c8.I      = 0;     // Reset index register
+    m_c8.SP     = 0;     // Reset stack pointer
+    m_instr     = {0};   // Reset current opcode
+
+    // Clear display memory
+    memset(m_c8.DP, 0, sizeof(m_c8.DP));
+
+    // Clear stack memory
+    memset(m_c8.STACK, 0, sizeof(m_c8.STACK));
+
+    // Clear register memory
+    memset(m_c8.V, 0, sizeof(m_c8.V));
+
+    // Clear memory
+    memset(m_c8.RAM, 0, sizeof(m_c8.RAM));
+
+    // Clear keypad memory
+    memset(m_c8.KP, 0, sizeof(m_c8.KP));
+
+    // Load fontset
+    {
+        // Load fontset into memory
+        for (int i = 0; i < 16 * 5; ++i) m_c8.RAM[i] = FONT_SET[i];
+    }
+
+    // Reset timers
+    m_c8.DT = 0; m_c8.ST = 0;
+
+    // Clear display
+    m_c8.DF = true;
 }
 
 // Instructions

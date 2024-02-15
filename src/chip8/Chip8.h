@@ -108,11 +108,4 @@ private:
     disassembly_t disassemble(uint16_t nStart, uint16_t nStop) const;
 };
 
-
-inline void
-Chip8::Reset()
-{
-    Initialize();
-}
-
 #endif //CHIP0U_CHIP8_H
