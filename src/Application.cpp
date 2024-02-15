@@ -44,7 +44,9 @@ Application::Setup()
     rlImGuiSetup(true);
     m_io = &ImGui::GetIO();
 
-    ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".ch8", ImVec4(0.0f, 1.0f, 0.5f, 0.9f), "[CH8]");
+    // File dialog setup
+    ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".ch8", ImVec4(0.25f, 1.0f, 0.0f, 1.0f), ICON_FA_FILE);
+    ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir | IGFD_FileStyleByContainedInFullName, "roms", ImVec4(0.25f, 1.0f, 0.0f, 1.0f), ICON_FA_GAMEPAD);
 }
 
 void
