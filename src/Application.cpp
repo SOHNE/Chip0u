@@ -81,13 +81,12 @@ Application::Update()
 
 void Application::Render()
 {
-    if (!m_chip8->GetDrawFlag()) return;
-
     BeginDrawing();
 
     ClearBackground(m_themes[m_isLightTheme].bg);
 
     // CHIP-8 display
+    if (m_chip8->GetDrawFlag())
     {
         auto display = m_chip8->GetDisplay();
         for (int y = 0; y < 32; ++y)
