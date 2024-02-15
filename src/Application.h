@@ -1,5 +1,5 @@
-#ifndef CHIPO_APPLICATION_H
-#define CHIPO_APPLICATION_H
+#ifndef CHIP0U_APPLICATION_H
+#define CHIP0U_APPLICATION_H
 
 #include <map>
 #include <vector>
@@ -9,8 +9,7 @@
 #include "rlImGui.h"
 #include "ImGuiFileDialog.h"
 
-// Forwards declaration
-class Chip8;
+#include "chip8/Chip8.h"
 
 
 class Application
@@ -27,7 +26,7 @@ public:
     void Render();
     void Destroy();
 
-    inline bool IsRunning() const { return !WindowShouldClose() && m_isRunning; }
+    bool IsRunning() const;
 
 private:
     void DrawToolbarUI();
@@ -35,14 +34,14 @@ private:
     void DrawKeysUI();
 
 private:
-    uint8_t m_isRunning : 1 {false};
-    Chip8 *m_chip8 {nullptr};
+    Chip8   *m_chip8 {nullptr};
 
-    uint8_t m_isPaused : 1 {false};
-    uint8_t m_showLines : 1 {true};
-    uint8_t m_isLightTheme : 1 {true};
+    uint8_t m_isRunning     : 1  {false};
+    uint8_t m_isPaused      : 1  {false};
+    uint8_t m_showLines     : 1  {true};
+    uint8_t m_isLightTheme  : 1  {true};
 
-    ImGuiIO* m_io {nullptr};
+    ImGuiIO *m_io {nullptr};
     uint8_t m_showUI : 1 {true};
     uint8_t m_showKeys : 1 {false};
 
@@ -80,17 +79,28 @@ private:
         {KEY_V,     {0xF, "F"}}
     };
 
-    // map containing the themes colors for BG, FG
-    typedef struct
+    // Color palette
+    typedef struct ColorPalette
     {
         Color bg;
         Color fg;
     } ColorPalette;
+
+    // Themes
     ColorPalette m_themes[2] = {
             {DARKGRAY, WHITE},
             {RAYWHITE, BLACK}
     };
+
+    // Latest file loaded
+    std::string m_latestFile;
 };
 
 
-#endif //CHIPO_APPLICATION_H
+inline bool
+Application::IsRunning() const
+{
+    return !WindowShouldClose() && m_isRunning;
+}
+
+#endif //CHIP0U_APPLICATION_H

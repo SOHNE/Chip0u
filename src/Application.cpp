@@ -1,7 +1,5 @@
 #include "Application.h"
 
-#include "chip8/Chip8.h"
-
 std::string hex(uint32_t n, uint8_t d)
 {
     std::string s(d, '0');
@@ -14,7 +12,7 @@ Application::Application()
 {
     // Create a window sized by the CHIP8 resolution
     InitWindow(m_showUI ? m_windowWidthUI : m_displayWidth,
-               m_displayHeight, "Chip0 [CHIP-8 Emulator]");
+               m_displayHeight, "Chip0u [CHIP-8 Emulator]");
     SetTargetFPS(60);
     m_isRunning = true;
 
@@ -31,7 +29,7 @@ Application::~Application()
 void
 Application::LoadFile(const char *filename)
 {
-    m_chip8->Reset(false);
+    m_latestFile = std::string(filename);
     m_chip8->LoadGame(filename);
     m_disassembled = m_chip8->GetDisassembled();
 }
@@ -39,7 +37,7 @@ Application::LoadFile(const char *filename)
 void
 Application::Setup()
 {
-    LoadFile("roms/TEST.ch8");
+    LoadFile("roms/s.ch8");
 
     // Imgui
     IMGUI_CHECKVERSION();
@@ -177,6 +175,8 @@ Application::DrawToolbarUI()
     {
         if (menu_action == "Open")
         {
+            m_isPaused = true;
+
             IGFD::FileDialogConfig config;
             config.path = ".";
             config.flags = ImGuiFileDialogFlags_Modal;
@@ -194,6 +194,7 @@ Application::DrawToolbarUI()
             }
 
             // close
+            m_isPaused = false;
             ImGuiFileDialog::Instance()->Close();
         }
     }
@@ -204,16 +205,23 @@ Application::DrawToolbarUI()
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
         {
+            m_isPaused = true;
+
             ImGui::SetItemDefaultFocus();
 
             ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("Chip0 - CHIP-8 Emulator").x) * 0.5f);
-            ImGui::Text("Chip0 - CHIP-8 Emulator");
+            ImGui::Text("Chip0u - CHIP-8 Emulator");
             ImGui::Separator();
             ImGui::Text("Description: A learning project");
             ImGui::Text("Author: Leandro Peres");
             ImGui::Text("Libraries: raylib, ImGui, ImGuiFileDialog");
             ImGui::Text("License: MIT");
-            if (ImGui::Button("Close")) ImGui::CloseCurrentPopup();
+
+            if (ImGui::Button("Close"))
+            {
+                ImGui::CloseCurrentPopup();
+                m_isPaused = false;
+            }
             ImGui::EndPopup();
         }
     }
@@ -228,7 +236,7 @@ Application::DrawDebugUI()
 
     // New window for the buttons
     ImGui::SetNextWindowPos(ImVec2(64 * 10, 20), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement/2, 50), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.4F, 50), ImGuiCond_Always);
     ImGui::Begin("Controls", nullptr, debugWindowFlags | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         if (m_isPaused)
         {
@@ -269,29 +277,18 @@ Application::DrawDebugUI()
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_ROTATE))
         {
-            m_chip8->Reset(true);
+            m_chip8->LoadGame(m_latestFile.c_str());
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         {
-            ImGui::SetTooltip("Reload ROM and reset state");
-        }
-
-        // Reset button without reloading ROM
-        ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_SPRAY_CAN_SPARKLES))
-        {
-            m_chip8->Reset(false);
-        }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-        {
-            ImGui::SetTooltip("Reset state without reloading ROM");
+            ImGui::SetTooltip("Reset and reload ROM");
         }
 
         // Show display lines
         ImGui::SameLine();
         if (m_showLines)
         {
-            if (ImGui::Button(ICON_FA_EYE))
+            if (ImGui::Button(ICON_FA_SQUARE))
             {
                 m_showLines = false;
             }
@@ -299,8 +296,10 @@ Application::DrawDebugUI()
             {
                 ImGui::SetTooltip("Hide display lines");
             }
-        } else {
-            if (ImGui::Button(ICON_FA_EYE_LOW_VISION))
+        }
+        else
+        {
+            if (ImGui::Button(ICON_FA_CHESS_BOARD))
             {
                 m_showLines = true;
             }
@@ -322,7 +321,9 @@ Application::DrawDebugUI()
         {
             ImGui::SetTooltip("Toggle dark theme");
         }
-    } else {
+    }
+    else
+    {
         if (ImGui::Button(ICON_FA_MOON))
         {
             m_isLightTheme = true;
@@ -360,7 +361,7 @@ Application::DrawDebugUI()
     ImGui::End();
 
     ImGui::SetNextWindowPos(ImVec2(64 * 10, 70), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.5F, 120), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.4F, 120), ImGuiCond_Always);
     ImGui::Begin("Registers", nullptr, debugWindowFlags);
         ImGui::Text("PC: 0x%s [%d]", hex(m_chip8->GetPC(), 3).c_str(), m_chip8->GetPC());
         ImGui::Text("I: 0x%s [%d]", hex(m_chip8->GetI(), 3).c_str(), m_chip8->GetI());
@@ -370,9 +371,20 @@ Application::DrawDebugUI()
     ImGui::End();
 
     // Stack on left side of the registers
-    ImGui::SetNextWindowPos(ImVec2((64 * 10) + m_uiDisplacement * 0.5F, 20), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.5F, 170), ImGuiCond_Always);
-    ImGui::Begin("Data Registers", nullptr, debugWindowFlags);
+    ImGui::SetNextWindowPos(ImVec2((64 * 10) + m_uiDisplacement * 0.4F, 20), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.25F, 170), ImGuiCond_Always);
+    ImGui::Begin("Stack", nullptr, debugWindowFlags);
+    auto stack = m_chip8->GetStack();
+    for (int i = 0; i < 16; ++i)
+    {
+        ImGui::Text("0x%s: 0x%s", hex(i, 1).c_str(), hex(stack[i], 3).c_str());
+    }
+    ImGui::End();
+
+    // Data registers
+    ImGui::SetNextWindowPos(ImVec2((64 * 10) + m_uiDisplacement * 0.65F, 20), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(m_uiDisplacement * 0.35F, 170), ImGuiCond_Always);
+    ImGui::Begin("V0~VF", nullptr, debugWindowFlags);
         for (int i = 0; i < 16; ++i)
         {
             ImGui::Text("V%X: 0x%s [%d]", i, hex(m_chip8->GetV()[i], 2).c_str(), m_chip8->GetV()[i]);
@@ -394,11 +406,31 @@ Application::DrawDebugUI()
                 ImGui::EndPopup();
             }
 
-
             if (ImGui::BeginTabItem("Memory"))
             {
+                static char start[6] = "0x00";
+                static char end[6] = "0xFFF";
+
+                ImGui::Text("Range: ");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth((m_uiDisplacement * 0.5F) - 150);
+                ImGui::InputText("Start", start, IM_ARRAYSIZE(start), ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth((m_uiDisplacement * 0.5F) - 150);
+                ImGui::InputText("End", end, IM_ARRAYSIZE(end), ImGuiInputTextFlags_CharsHexadecimal);
+
+                ImGui::Separator();
+
+                // Convert the input to uint32_t
+                uint32_t start_val = std::stoul(start, nullptr, 16);
+                uint32_t end_val = std::stoul(end, nullptr, 16);
+
+                // Clamp the values to valid memory range
+                start_val = std::max(0u, std::min(start_val, 4096u));
+                end_val = std::max(0u, std::min(end_val, 4096u));
+
                 auto memory = m_chip8->GetMemory();
-                for (int i = 0; i < 4096; i += 16)
+                for (uint32_t i = start_val; i < end_val; i += 16)
                 {
                     std::string s = "0x" + hex(i, 3) + ": ";
                     for (int j = 0; j < 16; ++j)
@@ -437,6 +469,10 @@ Application::DrawDebugUI()
 
             if (ImGui::BeginTabItem("Disassembled"))
             {
+                std::string header = "Addrs: Mnemonic" + std::string(13, ' ') + "// Opcode";
+                ImGui::TextColored(ImVec4(0.25f, 1.0f, 0.0f, 1.0f), "%s", header.c_str());
+                ImGui::Separator();
+
                 for (const auto& [addr, inst] : m_disassembled)
                 {
                     // Is the current instruction? Then color it red!
