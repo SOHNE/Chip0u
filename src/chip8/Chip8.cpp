@@ -1,6 +1,9 @@
 #include "Chip8.h"
 
-static constexpr uint8_t FONT_SET[16 * 5]
+#include <random>
+
+
+static constexpr uint8_t FONT_SET[FONT_SET_SIZE]
 {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -23,36 +26,46 @@ static constexpr uint8_t FONT_SET[16 * 5]
 
 Chip8::Chip8()
 {
-    // Initialize the Chip8
-    Initialize();
-}
-
-
-void Chip8::Initialize()
-{
     // Populate instructions map
     using c8 = Chip8;
     m_lookup =
     {
+        /** Clearing and Returning Instructions */
         {0x00E0, {"CLS", &c8::OP_00E0}}, {0x00EE, {"RET", &c8::OP_00EE}},
+        /** Jump Instructions */
         {0x1000, {"JP", &c8::OP_1NNN}},
+        /** Call Instructions */
         {0x2000, {"CALL", &c8::OP_2NNN}},
+        /** Skip Instructions */
         {0x3000, {"SE", &c8::OP_3XNN}}, {0x4000, {"SNE", &c8::OP_4XNN}}, {0x5000, {"SE", &c8::OP_5XY0}},
+        /** Load and Add Instructions */
         {0x6000, {"LD", &c8::OP_6XNN}}, {0x7000, {"ADD", &c8::OP_7XNN}},
+        /** Register Instructions */
         {0x8000, {"LD", &c8::OP_8XY0}}, {0x8001, {"OR", &c8::OP_8XY1}}, {0x8002, {"AND", &c8::OP_8XY2}}, {0x8003, {"XOR", &c8::OP_8XY3}}, {0x8004, {"ADD", &c8::OP_8XY4}}, {0x8005, {"SUB", &c8::OP_8XY5}}, {0x8006, {"SHR", &c8::OP_8XY6}}, {0x8007, {"SUBN", &c8::OP_8XY7}}, {0x800E, {"SHL", &c8::OP_8XYE}},
+        /** Skip Instructions */
         {0x9000, {"SNE", &c8::OP_9XY0}},
+        /** Load Instructions */
         {0xA000, {"LD", &c8::OP_ANNN}},
+        /** Jump Instructions */
         {0xB000, {"JP", &c8::OP_BNNN}},
+        /** Random Number Instructions */
         {0xC000, {"RND", &c8::OP_CXNN}},
+        /** Draw Instructions */
         {0xD000, {"DRW", &c8::OP_DXYN}},
+        /** Skip Instructions */
         {0xE09E, {"SKP", &c8::OP_EX9E}}, {0xE0A1, {"SKNP", &c8::OP_EXA1}},
+        /** Timer and Load Instructions */
         {0xF007, {"LD", &c8::OP_FX07}}, {0xF00A, {"LD", &c8::OP_FX0A}}, {0xF015, {"LD", &c8::OP_FX15}}, {0xF018, {"LD", &c8::OP_FX18}}, {0xF01E, {"ADD", &c8::OP_FX1E}}, {0xF029, {"LD", &c8::OP_FX29}}, {0xF033, {"LD", &c8::OP_FX33}}, {0xF055, {"LD", &c8::OP_FX55}}, {0xF065, {"LD", &c8::OP_FX65}}
     };
 
+    // Initialize the Chip8
     Reset();
 }
 
-void Chip8::LoadGame(const char* filename)
+
+
+void
+Chip8::LoadGame(const char* filename)
 {
     Reset();
 
@@ -105,7 +118,8 @@ void Chip8::LoadGame(const char* filename)
     free(buffer);
 }
 
-void Chip8::Clock()
+void
+Chip8::Clock()
 {
     // Fetch current instruction
     {
@@ -167,9 +181,8 @@ Chip8::Reset()
     // Clear keypad memory
     memset(m_c8.KP, 0, sizeof(m_c8.KP));
 
-    // Load fontset
+    // Load fontset into memory (0x000 - 0x1FF)
     {
-        // Load fontset into memory
         for (int i = 0; i < 16 * 5; ++i) m_c8.RAM[i] = FONT_SET[i];
     }
 
@@ -183,27 +196,31 @@ Chip8::Reset()
 // Instructions
 // --------------------------------------------------------------------------------
 
-void Chip8::OP_00E0()
+void
+Chip8::OP_00E0()
 {
     // Clear the display
     memset(m_c8.DP, 0, sizeof(m_c8.DP));
     m_c8.DF = true;
 }
 
-void Chip8::OP_00EE()
+void
+Chip8::OP_00EE()
 {
     // Return from a subroutine
     --m_c8.SP;
     m_c8.PC = m_c8.STACK[m_c8.SP];
 }
 
-void Chip8::OP_1NNN()
+void
+Chip8::OP_1NNN()
 {
     // Jump to address NNN
     m_c8.PC = m_instr.NNN;
 }
 
-void Chip8::OP_2NNN()
+void
+Chip8::OP_2NNN()
 {
     // Call subroutine at NNN
     m_c8.STACK[m_c8.SP] = m_c8.PC;
@@ -211,7 +228,8 @@ void Chip8::OP_2NNN()
     m_c8.PC = m_instr.NNN;
 }
 
-void Chip8::OP_3XNN()
+void
+Chip8::OP_3XNN()
 {
     // Skip next instruction if Vx == NN
     if (m_c8.V[m_instr.X] == m_instr.NN)
@@ -220,7 +238,8 @@ void Chip8::OP_3XNN()
     }
 }
 
-void Chip8::OP_4XNN()
+void
+Chip8::OP_4XNN()
 {
     // Skip next instruction if Vx != NN
     if (m_c8.V[m_instr.X] != m_instr.NN)
@@ -229,7 +248,8 @@ void Chip8::OP_4XNN()
     }
 }
 
-void Chip8::OP_5XY0()
+void
+Chip8::OP_5XY0()
 {
     // Skip next instruction if Vx == Vy
     if (m_c8.V[m_instr.X] == m_instr.NN)
@@ -238,43 +258,50 @@ void Chip8::OP_5XY0()
     }
 }
 
-void Chip8::OP_6XNN()
+void
+Chip8::OP_6XNN()
 {
     // Set Vx = NN
     m_c8.V[m_instr.X] = m_instr.NN;
 }
 
-void Chip8::OP_7XNN()
+void
+Chip8::OP_7XNN()
 {
     // Set Vx = Vx + NN
     m_c8.V[m_instr.X] += m_instr.NN;
 }
 
-void Chip8::OP_8XY0()
+void
+Chip8::OP_8XY0()
 {
     // Set Vx = Vy
     m_c8.V[m_instr.X] = m_c8.V[m_instr.Y];
 }
 
-void Chip8::OP_8XY1()
+void
+Chip8::OP_8XY1()
 {
     // Set Vx = Vx OR Vy
     m_c8.V[m_instr.X] |= m_c8.V[m_instr.Y];
 }
 
-void Chip8::OP_8XY2()
+void
+Chip8::OP_8XY2()
 {
     // Set Vx = Vx AND Vy
     m_c8.V[m_instr.X] &= m_c8.V[m_instr.Y];
 }
 
-void Chip8::OP_8XY3()
+void
+Chip8::OP_8XY3()
 {
     // Set Vx = Vx XOR Vy
     m_c8.V[m_instr.X] ^= m_c8.V[m_instr.Y];
 }
 
-void Chip8::OP_8XY4()
+void
+Chip8::OP_8XY4()
 {
     // Set Vx = Vx + Vy, set VF = carry
     if (m_c8.V[m_instr.Y] > (0xFF - m_c8.V[m_instr.X]))
@@ -289,7 +316,8 @@ void Chip8::OP_8XY4()
     m_c8.V[m_instr.X] += m_c8.V[m_instr.Y];
 }
 
-void Chip8::OP_8XY5()
+void
+Chip8::OP_8XY5()
 {
     // Set Vx = Vx - Vy, set VF = NOT borrow
     if (m_c8.V[m_instr.Y] > m_c8.V[m_instr.X])
@@ -304,14 +332,16 @@ void Chip8::OP_8XY5()
     m_c8.V[m_instr.X] -= m_c8.V[m_instr.Y];
 }
 
-void Chip8::OP_8XY6()
+void
+Chip8::OP_8XY6()
 {
     // Set Vx = Vx SHR 1
     m_c8.V[0xF] = m_c8.V[m_instr.X] & 0x1;
     m_c8.V[m_instr.X] >>= 1;
 }
 
-void Chip8::OP_8XY7()
+void
+Chip8::OP_8XY7()
 {
     // Set Vx = Vy - Vx, set VF = NOT borrow
     if (m_c8.V[m_instr.X] > m_c8.V[m_instr.Y])
@@ -326,14 +356,16 @@ void Chip8::OP_8XY7()
     m_c8.V[m_instr.X] = m_c8.V[m_instr.Y] - m_c8.V[m_instr.X];
 }
 
-void Chip8::OP_8XYE()
+void
+Chip8::OP_8XYE()
 {
     // Set Vx = Vx SHL 1
     m_c8.V[0xF] = m_c8.V[m_instr.X] >> 7;
     m_c8.V[m_instr.X] <<= 1;
 }
 
-void Chip8::OP_9XY0()
+void
+Chip8::OP_9XY0()
 {
     // Skip next instruction if Vx != Vy
     if (m_c8.V[m_instr.X] != m_c8.V[m_instr.Y])
@@ -342,25 +374,34 @@ void Chip8::OP_9XY0()
     }
 }
 
-void Chip8::OP_ANNN()
+void
+Chip8::OP_ANNN()
 {
     // Set I = NNN
     m_c8.I = m_instr.NNN;
 }
 
-void Chip8::OP_BNNN()
+void
+Chip8::OP_BNNN()
 {
     // Jump to location NNN + V0
     m_c8.PC = m_instr.NNN + m_c8.V[0];
 }
 
-void Chip8::OP_CXNN()
+void
+Chip8::OP_CXNN()
 {
     // Set Vx = random byte AND NN
-    m_c8.V[m_instr.X] = (rand() % 0xFF) & m_instr.NN;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    gen.seed(std::chrono::system_clock::now().time_since_epoch().count());
+    std::uniform_int_distribution<> distrib(0, 0xFF);
+
+    m_c8.V[m_instr.X] = distrib(gen) & m_instr.NN;
 }
 
-void Chip8::OP_DXYN()
+void
+Chip8::OP_DXYN()
 {
     // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision
     uint8_t spriteX = m_c8.V[m_instr.X];
@@ -390,7 +431,8 @@ void Chip8::OP_DXYN()
     m_c8.DF = true;
 }
 
-void Chip8::OP_EX9E()
+void
+Chip8::OP_EX9E()
 {
     // Skip next instruction if key with the value of Vx is pressed
     uint8_t key = m_c8.V[m_instr.X];
@@ -400,7 +442,8 @@ void Chip8::OP_EX9E()
     }
 }
 
-void Chip8::OP_EXA1()
+void
+Chip8::OP_EXA1()
 {
     // Skip next instruction if key with the value of Vx is not pressed
     uint8_t key = m_c8.V[m_instr.X];
@@ -410,13 +453,15 @@ void Chip8::OP_EXA1()
     }
 }
 
-void Chip8::OP_FX07()
+void
+Chip8::OP_FX07()
 {
     // Set Vx = delay timer value
     m_c8.V[m_instr.X] = m_c8.DT;
 }
 
-void Chip8::OP_FX0A()
+void
+Chip8::OP_FX0A()
 {
     // Wait for a key press, store the value of the key in Vx
     bool keyPress = false;
@@ -436,19 +481,22 @@ void Chip8::OP_FX0A()
     }
 }
 
-void Chip8::OP_FX15()
+void
+Chip8::OP_FX15()
 {
     // Set delay timer = Vx
     m_c8.DT = m_c8.V[m_instr.X];
 }
 
-void Chip8::OP_FX18()
+void
+Chip8::OP_FX18()
 {
     // Set sound timer = Vx
     m_c8.ST = m_c8.V[m_instr.X];
 }
 
-void Chip8::OP_FX1E()
+void
+Chip8::OP_FX1E()
 {
     // Set I = I + Vx
     if (m_c8.I + m_c8.V[m_instr.X] > 0xFFF)
@@ -463,13 +511,15 @@ void Chip8::OP_FX1E()
     m_c8.I += m_c8.V[m_instr.X];
 }
 
-void Chip8::OP_FX29()
+void
+Chip8::OP_FX29()
 {
     // Set I = location of sprite for digit Vx
     m_c8.I = m_c8.V[m_instr.X] * 0x5;
 }
 
-void Chip8::OP_FX33()
+void
+Chip8::OP_FX33()
 {
     // Store BCD representation of Vx in memory locations I, I+1, and I+2
     uint8_t Vx = m_c8.V[m_instr.X];
@@ -478,7 +528,8 @@ void Chip8::OP_FX33()
     m_c8.RAM[m_c8.I + 2] = (Vx % 100) % 10;
 }
 
-void Chip8::OP_FX55()
+void
+Chip8::OP_FX55()
 {
     // Store registers V0 through Vx in memory starting at location I
     for (int i = 0; i <= m_instr.X; ++i)
@@ -490,7 +541,8 @@ void Chip8::OP_FX55()
     m_c8.I += m_instr.X + 1;
 }
 
-void Chip8::OP_FX65()
+void
+Chip8::OP_FX65()
 {
     // Read registers V0 through Vx from memory starting at location I
     for (int i = 0; i <= m_instr.X; ++i)
@@ -505,7 +557,7 @@ void Chip8::OP_FX65()
 // --------------------------------------------------------------------------------
 
 uint16_t
-Chip8::GetMaskedOpcode(uint16_t opcode) const
+Chip8::GetMaskedOpcode(uint16_t opcode)
 {
     uint16_t masked_opcode = opcode & 0xF000;
     switch (masked_opcode)
@@ -532,9 +584,9 @@ Chip8::disassembly_t
 Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
 {
     uint32_t addr = nStart;
-    uint8_t value = 0x00, lo = 0x00, hi = 0x00;
-    std::map<uint16_t, std::string> mapLines;
+    std::map<uint16_t, std::string> mapLines{};
     uint16_t line_addr = 0;
+    std::string sInst{};
 
     auto hex = [](uint32_t n, uint8_t d)
     {
@@ -556,11 +608,8 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
     {
         line_addr = addr;
 
-        std::string sInst{};
-
+        sInst = "";
         uint16_t nOp = m_c8.RAM[addr] << 8 | m_c8.RAM[addr + 1]; addr++;
-
-
         uint16_t masked_opcode = GetMaskedOpcode(nOp);
 
         auto it = m_lookup.find(masked_opcode);
@@ -602,11 +651,12 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
                 sInst += " V" + hex((nOp & 0x0F00) >> 8, 1);
             }
         }
-        else
+        else // Unknown opcode
         {
             sInst += "XXX";
         }
 
+        // Add the raw opcode
         sInst += std::string(21 - sInst.size(), ' ') + "// 0x" + hex(nOp, 4);
 
         mapLines[line_addr] = sInst;

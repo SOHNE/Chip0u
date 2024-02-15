@@ -4,10 +4,13 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <string>
 #include <cstring>
+#include <cassert>
+#include <string>
 #include <map>
 #include <vector>
+
+#define cuAssert(x) assert(x)
 
 #define TOTAL_RAM       4096
 #define TOTAL_REGISTERS 16
@@ -17,10 +20,12 @@
 #define DISPLAY_HEIGHT  32
 #define DISPLAY_SIZE    (DISPLAY_WIDTH * DISPLAY_HEIGHT)
 
-#define FONTSET_SIZE    80
+#define FONT_SET_SIZE    (5 * 16)
 
 #define PROG_START      0x200
 #define PROG_END        0xFFF
+
+
 
 class Chip8
 {
@@ -36,34 +41,16 @@ public:
         uint8_t     Y;      // 4 bit register identifier
     } instruction_t;
 
-public:
-    Chip8();
-    ~Chip8() = default;
+    // Instructions map to function pointers
+    typedef struct instruction_map_t
+    {
+        // Holds the name of the instruction.
+        std::string name;
 
-    void Initialize();
-    void LoadGame(const char* filename);
-    void Clock();
-    void Reset();
+        // A pointer to the function in the Chip8 class that implements the instruction.
+        void (Chip8::*function)(void) = nullptr;
+    } instruction_map_t;
 
-    inline void SetKey(uint8_t key, bool state) { m_c8.KP[key] = state; }
-
-    // Getters
-    inline bool         GetDrawFlag()   { return m_c8.DF; }
-    inline bool*        GetDisplay()    { return m_c8.DP; }
-    inline uint8_t*     GetMemory()     { return m_c8.RAM; }
-    inline uint8_t*     GetV()          { return m_c8.V; }
-    inline uint16_t     GetI()          { return m_c8.I; }
-    inline uint16_t     GetPC()         { return m_c8.PC; }
-    inline uint8_t      GetSP()         { return m_c8.SP; }
-    inline uint16_t*    GetStack()      { return m_c8.STACK; }
-    inline uint8_t      GetDelayTimer() { return m_c8.DT; }
-    inline uint8_t      GetSoundTimer() { return m_c8.ST; }
-    inline uint8_t*     GetKeyboard()   { return m_c8.KP; }
-
-    // Get disassembled instructions
-    std::map<uint16_t, std::string> GetDisassembled() const { return disassemble(0x200, 0xFFF); }
-
-private:
     typedef struct chip8_t
     {
         uint8_t     V[16];             // V0 - VF
@@ -78,19 +65,40 @@ private:
         bool        DF;                // Draw Flag
     } chip8_t;
 
+public:
+    Chip8();
+    ~Chip8() = default;
+
+    void Clock();
+    void Reset();
+    void LoadGame(const char* filename);
+
+    void SetKey(uint8_t key, bool state);
+
+    // Getters
+    bool       GetDrawFlag();
+    bool*      GetDisplay();
+    uint8_t*   GetMemory();
+    uint8_t*   GetV();
+    uint16_t   GetI();
+    uint16_t   GetPC();
+    uint8_t    GetSP();
+    uint16_t*  GetStack();
+    uint8_t    GetDelayTimer();
+    uint8_t    GetSoundTimer();
+    uint8_t*   GetKeyboard();
+
+    // Get disassembled instructions
+    std::map<uint16_t, std::string> GetDisassembled() const;
+
+private:
     // Current state of the CHIP8
-    chip8_t m_c8;
+    chip8_t m_c8{0};
 
     // Instructions
-    instruction_t m_instr;
+    instruction_t m_instr{0};
 
-    // Instructions map to function pointers
-    typedef struct instruction_map_t
-    {
-        std::string name;   // Name of the instruction
-        void        (Chip8::*function)(void) = nullptr; // Function pointer
-    };
-
+    // Lookup table for instructions
     std::map<uint16_t, instruction_map_t> m_lookup;
 
     // Instructions
@@ -100,12 +108,91 @@ private:
     void OP_FX07(), OP_FX0A(), OP_FX15(), OP_FX18(), OP_FX1E(), OP_FX29(), OP_FX33(), OP_FX55(), OP_FX65();
 
     // Get masked opcode
-    uint16_t GetMaskedOpcode(uint16_t opcode) const;
+    [[nodiscard]] static uint16_t GetMaskedOpcode(uint16_t opcode) ;
 
     // Produces a map of strings, with keys equivalent to instruction start locations
     // in memory, for the specified address range
     typedef std::map<uint16_t, std::string> disassembly_t;
     disassembly_t disassemble(uint16_t nStart, uint16_t nStop) const;
 };
+
+inline void
+Chip8::SetKey(uint8_t key, bool state)
+{
+    cuAssert(key < 16 && "Invalid key");
+    m_c8.KP[key] = state;
+}
+
+inline bool
+Chip8::GetDrawFlag()
+{
+    return m_c8.DF;
+}
+
+inline bool*
+Chip8::GetDisplay()
+{
+    return m_c8.DP;
+}
+
+inline uint8_t*
+Chip8::GetMemory()
+{
+    return m_c8.RAM;
+}
+
+inline uint8_t*
+Chip8::GetV()
+{
+    return m_c8.V;
+}
+
+inline uint16_t
+Chip8::GetI()
+{
+    return m_c8.I;
+}
+
+inline uint16_t
+Chip8::GetPC()
+{
+    return m_c8.PC;
+}
+
+inline uint8_t
+Chip8::GetSP()
+{
+    return m_c8.SP;
+}
+
+inline uint16_t*
+Chip8::GetStack()
+{
+    return m_c8.STACK;
+}
+
+inline uint8_t
+Chip8::GetDelayTimer()
+{
+    return m_c8.DT;
+}
+
+inline uint8_t
+Chip8::GetSoundTimer()
+{
+    return m_c8.ST;
+}
+
+inline uint8_t*
+Chip8::GetKeyboard()
+{
+    return m_c8.KP;
+}
+
+inline Chip8::disassembly_t
+Chip8::GetDisassembled() const
+{
+    return disassemble(PROG_START, PROG_END);
+}
 
 #endif //CHIP0U_CHIP8_H
