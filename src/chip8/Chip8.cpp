@@ -2,6 +2,7 @@
 
 #include <random>
 
+#include <chrono>
 
 static constexpr uint8_t FONT_SET[FONT_SET_SIZE]
 {
