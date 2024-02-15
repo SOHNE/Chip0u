@@ -121,7 +121,7 @@ private:
     void OP_9XY0(), OP_ANNN(), OP_BNNN(), OP_CXNN(), OP_DXYN(), OP_EX9E(), OP_EXA1();
     void OP_FX07(), OP_FX0A(), OP_FX15(), OP_FX18(), OP_FX1E(), OP_FX29(), OP_FX33(), OP_FX55(), OP_FX65();
 
-    // Get masked opcode
+    // Get masked opcode. Make it possible to look up instructions in the lookup table
     [[nodiscard]] static uint16_t GetMaskedOpcode(uint16_t opcode) ;
 
     // Produces a map of strings, with keys equivalent to instruction start locations
