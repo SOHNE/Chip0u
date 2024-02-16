@@ -468,13 +468,14 @@ Application::DrawDebugUI()
                 for (const auto& [addr, inst] : m_disassembled)
                 {
                     // Is the current instruction? Then color it red!
+                    std::string line = "$" + hex(addr, 3) + ": " + inst;
                     if (addr == m_chip8->GetPC())
                     {
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "0x%s: %s", hex(addr, 3).c_str(), inst.c_str());
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s", line.c_str());
                     }
                     else
                     {
-                        ImGui::Text("0x%s: %s", hex(addr, 3).c_str(), inst.c_str());
+                        ImGui::Text("$%s", line.c_str());
                     }
                 }
                 ImGui::EndTabItem();

@@ -622,7 +622,7 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
             }
             else if (it->second.function == &Chip8::OP_3XNN || it->second.function == &Chip8::OP_4XNN || it->second.function == &Chip8::OP_6XNN || it->second.function == &Chip8::OP_7XNN || it->second.function == &Chip8::OP_CXNN)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", " + hex(nOp & 0x00FF, 2);
+                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", #" + hex(nOp & 0x00FF, 2);
             }
             else if (it->second.function == &Chip8::OP_5XY0 || it->second.function == &Chip8::OP_9XY0)
             {
@@ -634,7 +634,7 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
             }
             else if (it->second.function == &Chip8::OP_DXYN)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", V" + hex((nOp & 0x00F0) >> 4, 1) + ", " + hex(nOp & 0x000F, 1);
+                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", V" + hex((nOp & 0x00F0) >> 4, 1) + ", #" + hex(nOp & 0x000F, 1);
             }
             else if (it->second.function == &Chip8::OP_FX29 || it->second.function == &Chip8::OP_FX33)
             {
