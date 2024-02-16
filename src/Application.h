@@ -12,6 +12,9 @@
 #include "chip8/Chip8.h"
 
 
+typedef std::map<uint32_t, std::pair<uint8_t, const char*>> keymapping_t;
+
+
 class Application
 {
 public:
@@ -39,7 +42,7 @@ private:
     uint8_t m_isRunning     : 1  {false};
     uint8_t m_isPaused      : 1  {false};
     uint8_t m_showLines     : 1  {true};
-    uint8_t m_isLightTheme  : 1  {true};
+    uint8_t m_isLightTheme  : 1  {false};
 
     ImGuiIO *m_io {nullptr};
     uint8_t m_showUI : 1 {true};
@@ -55,11 +58,11 @@ private:
     static constexpr uint32_t m_windowWidthUI { m_displayWidth + m_uiDisplacement };    // 940 (+ 300 for the ui)
 
     // Execution speed map (cycles per frame)
-    std::vector<uint32_t> m_speeds = {1, 7, 10, 15, 20, 30, 60, 120, 240, 1000};
+    std::vector<uint32_t> m_speeds = {1, 2, 7, 10, 15, 20, 30, 60, 120, 240, 1000};
     uint32_t m_speedIndex = 0;
 
     // Mapping of keys to CHIP8 keys
-    std::map<uint32_t, std::pair<uint8_t, const char*>> keyMapping =
+    keymapping_t keyMapping =
     {
         {KEY_ONE,   {0x1, "1"}},
         {KEY_TWO,   {0x2, "2"}},
