@@ -3,6 +3,7 @@
 #include <random>
 
 #include <chrono>
+#include <iostream>
 
 static constexpr uint8_t FONT_SET[FONT_SET_SIZE]
 {
@@ -124,12 +125,7 @@ Chip8::Clock()
 {
     // Fetch current instruction
     {
-        m_instr.OP    = m_c8.RAM[m_c8.PC] << 8 | m_c8.RAM[m_c8.PC + 1]; // Fetch opcode
-        m_instr.NNN   = m_instr.OP & 0x0FFF;                            // Extract NNN
-        m_instr.NN    = m_instr.OP & 0x00FF;                            // Extract NN
-        m_instr.N     = m_instr.OP & 0x000F;                            // Extract N
-        m_instr.X     = (m_instr.OP >> 8) & 0x000F;                     // Extract X
-        m_instr.Y     = (m_instr.OP >> 4) & 0x000F;                     // Extract Y
+        m_instr = instruction_t(m_c8.RAM[m_c8.PC] << 8 | m_c8.RAM[m_c8.PC + 1]);
 
         m_c8.PC += 2; // Move to next instruction
     }
@@ -561,21 +557,15 @@ uint16_t
 Chip8::GetMaskedOpcode(uint16_t opcode)
 {
     uint16_t masked_opcode = opcode & 0xF000;
-    switch (masked_opcode)
+
+    switch (masked_opcode >> 12)
     {
-        case 0x0000:
-            masked_opcode = opcode & 0x00FF;
-            break;
-        case 0x8000:
-        case 0x9000:
-            masked_opcode = opcode & 0xF00F;
-            break;
-        case 0xE000:
-        case 0xF000:
-            masked_opcode = opcode & 0xF0FF;
-            break;
-        default:
-            break;
+        case 0x0: masked_opcode = (opcode & 0x00F0) | (opcode & 0x000F); break;
+        case 0x8: masked_opcode = opcode & 0xF00F; break;
+
+        case 0xE:
+        case 0xF: masked_opcode = opcode & 0xF0FF; break;
+        default: break;
     }
 
     return masked_opcode;
@@ -586,6 +576,7 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
 {
     uint32_t addr = nStart;
     std::map<uint16_t, std::string> mapLines{};
+    instruction_t instr{0};
     uint16_t line_addr = 0;
     std::string sInst{};
 
@@ -603,9 +594,10 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
     {
         line_addr = addr;
 
-        sInst = "";
-        uint16_t nOp = m_c8.RAM[addr] << 8 | m_c8.RAM[addr + 1]; addr+=2;
-        uint16_t masked_opcode = GetMaskedOpcode(nOp);
+        instr = instruction_t(m_c8.RAM[addr] << 8 | m_c8.RAM[addr + 1]); addr += 2;
+        uint16_t masked_opcode = GetMaskedOpcode(instr.OP);
+
+        sInst = hex(instr.OP, 4) + std::string(3, ' ');
 
         auto it = m_lookup.find(masked_opcode);
         if (it != m_lookup.end())
@@ -618,40 +610,37 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
             }
             else if (it->second.function == &Chip8::OP_1NNN || it->second.function == &Chip8::OP_2NNN || it->second.function == &Chip8::OP_ANNN || it->second.function == &Chip8::OP_BNNN)
             {
-                sInst += " $" + hex(nOp & 0x0FFF, 3);
+                sInst += " $" + hex(instr.NNN, 3);
             }
             else if (it->second.function == &Chip8::OP_3XNN || it->second.function == &Chip8::OP_4XNN || it->second.function == &Chip8::OP_6XNN || it->second.function == &Chip8::OP_7XNN || it->second.function == &Chip8::OP_CXNN)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", #" + hex(nOp & 0x00FF, 2);
+                sInst += " V" + hex(instr.X, 1) + ", #" + hex(instr.NN, 2);
             }
             else if (it->second.function == &Chip8::OP_5XY0 || it->second.function == &Chip8::OP_9XY0)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", V" + hex((nOp & 0x00F0) >> 4, 1);
+                sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1);
             }
             else if (it->second.function == &Chip8::OP_8XY0 || it->second.function == &Chip8::OP_8XY1 || it->second.function == &Chip8::OP_8XY2 || it->second.function == &Chip8::OP_8XY3 || it->second.function == &Chip8::OP_8XY4 || it->second.function == &Chip8::OP_8XY5 || it->second.function == &Chip8::OP_8XY6 || it->second.function == &Chip8::OP_8XY7 || it->second.function == &Chip8::OP_8XYE)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", V" + hex((nOp & 0x00F0) >> 4, 1);
+                sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1);
             }
             else if (it->second.function == &Chip8::OP_DXYN)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1) + ", V" + hex((nOp & 0x00F0) >> 4, 1) + ", #" + hex(nOp & 0x000F, 1);
+                sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1) + ", #" + hex(instr.N, 1);
             }
             else if (it->second.function == &Chip8::OP_FX29 || it->second.function == &Chip8::OP_FX33)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1);
+                sInst += " V" + hex(instr.X, 1);
             }
             else if (it->second.function == &Chip8::OP_FX55 || it->second.function == &Chip8::OP_FX65)
             {
-                sInst += " V" + hex((nOp & 0x0F00) >> 8, 1);
+                sInst += " V" + hex(instr.X, 1);
             }
         }
         else // Unknown opcode
         {
             sInst += "XXX";
         }
-
-        // Add the raw opcode
-        sInst += std::string(21 - sInst.size(), ' ') + "// 0x" + hex(nOp, 4);
 
         mapLines[line_addr] = sInst;
     }

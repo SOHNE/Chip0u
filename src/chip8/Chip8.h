@@ -33,12 +33,23 @@ public:
     // CHIP8 Instruction format
     typedef struct instruction_t
     {
-        uint16_t    OP; // 16 bit opcode
+        uint16_t    OP;     // 16 bit opcode
         uint16_t    NNN;    // 12 bit constant
         uint8_t     NN;     // 8 bit constant
         uint8_t     N;      // 4 bit constant
         uint8_t     X;      // 4 bit register identifier
         uint8_t     Y;      // 4 bit register identifier
+
+        instruction_t(uint16_t opcode)
+        {
+            OP = opcode;
+            // Extract the different parts of the opcode
+            NNN = opcode & 0x0FFF;
+            NN = opcode & 0x00FF;
+            N = opcode & 0x000F;
+            X = (opcode & 0x0F00) >> 8;
+            Y = (opcode & 0x00F0) >> 4;
+        }
     } instruction_t;
 
     // Instructions map to function pointers
@@ -111,6 +122,28 @@ private:
 
     // Lookup table for instructions
     std::map<uint16_t, instruction_map_t> m_lookup;
+
+    // a map of comments for each instruction
+    std::map<uint16_t, std::string> m_comments =
+    {
+        {0x00E0, "Clear the display"},
+        {0x00EE, "Return from a subroutine"},
+        {0x1, "Jump to address NNN"},
+        {0x2, "Call subroutine at NNN"},
+        {0x3, "Skip next instruction if Vx = NN"},
+        {0x4, "Skip next instruction if Vx != NN"},
+        {0x5, "Skip next instruction if Vx = Vy"},
+        {0x6, "Set Vx = NN"},
+        {0x7, "Set Vx = Vx + NN"},
+        {0x8, "Set Vx = Vy"},
+        {0x9, "Skip next instruction if Vx != Vy"},
+        {0xA, "Set I = NNN"},
+        {0xB, "Jump to location NNN + V0"},
+        {0xC, "Set Vx = random byte AND NN"},
+        {0xD, "Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision"},
+        {0xE, "Skip next instruction if key with the value of Vx is pressed"},
+        {0xF, "Miscellaneous instructions"}
+    };
 
     // vector of all breakpoints
     //std::vector<debug_t> m_breakpoints;

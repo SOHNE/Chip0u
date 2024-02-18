@@ -400,19 +400,22 @@ Application::DrawDebugUI()
 
         if (ImGui::BeginTabBar("DebuggerTabs", ImGuiTabBarFlags_None))
         {
-            if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
-                ImGui::OpenPopup("DebugHelper");
-
-            if (ImGui::BeginPopup("DebugHelper"))
-            {
-                ImGui::Text("TODO: Helpful information goes here");
-                ImGui::EndPopup();
-            }
-
             if (ImGui::BeginTabItem("Memory"))
             {
-                static char start[6] = "0x00";
-                static char end[6] = "0xFFF";
+                if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+                    ImGui::OpenPopup("DebugHelper");
+
+                if (ImGui::BeginPopup("DebugHelper"))
+                {
+                    ImGui::Text("Memory range: 000 - FFF");
+                    ImGui::Text("000-1FF - Chip 8 interpreter (contains font set in emu)");
+                    ImGui::Text("050-0A0 - Used for the built in 4x5 pixel font set (0-F)");
+                    ImGui::Text("200-FFF - Program ROM and work RAM");
+                    ImGui::EndPopup();
+                }
+
+                static char start[4] = "000";
+                static char end[4] = "FFF";
 
                 ImGui::Text("Range: ");
                 ImGui::SameLine();
@@ -422,31 +425,54 @@ Application::DrawDebugUI()
                 ImGui::SetNextItemWidth((m_uiDisplacement * 0.5F) - 150);
                 ImGui::InputText("End", end, IM_ARRAYSIZE(end), ImGuiInputTextFlags_CharsHexadecimal);
 
-                ImGui::Separator();
-
-                // Convert the input to uint32_t
-                uint32_t start_val = std::stoul(start, nullptr, 16);
-                uint32_t end_val = std::stoul(end, nullptr, 16);
+                uint32_t start_val = strlen(start) != 0 ? std::stoul(start, nullptr, 16) : 0;
+                uint32_t end_val = strlen(end) != 0 ? std::stoul(end, nullptr, 16) : 4096;
 
                 // Clamp the values to valid memory range
                 start_val = std::max(0u, std::min(start_val, 4096u));
                 end_val = std::max(0u, std::min(end_val, 4096u));
 
+                ImGui::Separator();
+
                 auto memory = m_chip8->GetMemory();
                 for (uint32_t i = start_val; i < end_val; i += 16)
                 {
-                    std::string s = "0x" + hex(i, 3) + ": ";
-                    for (int j = 0; j < 16; ++j)
+                    std::string s = hex(i, 3) + ": ";
+                    ImGui::TextUnformatted(s.c_str());
+                    ImGui::SameLine();
+                    for (int j = 0; j < std::min(16u, end_val - i + 1); ++j)
                     {
-                        s += hex(memory[i + j], 2) + " ";
+                        s = hex(memory[i + j], 2);
+                        ImVec4 color = (memory[i + j] != 0) ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+                        ImGui::TextColored(color, "%s", s.c_str());
+                        // Tool tip
+                        if (ImGui::IsItemHovered())
+                        {
+                            ImGui::BeginTooltip();
+                            ImGui::Text("Addr: %s", hex(i + j, 3).c_str());
+                            ImGui::Separator();
+                            ImGui::Text("Decimal: %d", memory[i + j]);
+                            ImGui::Text("Char: %c", memory[i + j]);
+                            ImGui::EndTooltip();
+                        }
+
+                        if (j < 15) ImGui::SameLine();
                     }
-                    ImGui::Selectable(s.c_str());
                 }
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("Input"))
             {
+                if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+                    ImGui::OpenPopup("DebugHelper");
+
+                if (ImGui::BeginPopup("DebugHelper"))
+                {
+                    ImGui::Text("0x0 - 0xF: Chip 8 keys");
+                    ImGui::EndPopup();
+                }
+
                 auto keys = m_chip8->GetKeyboard();
                 for (int i = 0; i < 16; ++i)
                 {
@@ -461,21 +487,33 @@ Application::DrawDebugUI()
 
             if (ImGui::BeginTabItem("Disassembled"))
             {
-                std::string header = "Addrs: Mnemonic" + std::string(13, ' ') + "// Opcode";
+                if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+                    ImGui::OpenPopup("DebugHelper");
+
+                if (ImGui::BeginPopup("DebugHelper"))
+                {
+                    ImGui::Text("Disassembled instructions");
+                    ImGui::Text("More human readable than raw memory");
+                    ImGui::Text("Shows the current instruction (PC) in red");
+                    ImGui::EndPopup();
+                }
+
+                std::string header = "addr  op" + std::string(5, ' ') + "instruction";
                 ImGui::TextColored(ImVec4(0.25f, 1.0f, 0.0f, 1.0f), "%s", header.c_str());
-                ImGui::Separator();
+                header = "----  ----   -----------";
+                ImGui::Text("%s", header.c_str());
 
                 for (const auto& [addr, inst] : m_disassembled)
                 {
                     // Is the current instruction? Then color it red!
-                    std::string line = "$" + hex(addr, 3) + ": " + inst;
+                    header = hex(addr, 4) + "  " + inst;
                     if (addr == m_chip8->GetPC())
                     {
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s", line.c_str());
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s", header.c_str());
                     }
                     else
                     {
-                        ImGui::Text("$%s", line.c_str());
+                        ImGui::Text("%s", header.c_str());
                     }
                 }
                 ImGui::EndTabItem();
