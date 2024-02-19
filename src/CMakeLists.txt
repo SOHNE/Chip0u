@@ -1,16 +1,18 @@
-set(Chip0u_HEADER_FILES
-        Application.h
+set(CHIPOU_HEADER_FILES
         chip8/Chip8.h
+        Application.h
+        FrontEnd.h
 )
 
-set (CHIP_SOURCE_FILES
+set (CHIPOU_SOURCE_FILES
         main.cpp
-        Application.cpp
         chip8/Chip8.cpp
+        Application.cpp
+        FrontEnd.cpp
 )
 
 add_executable(Chip0u)
-target_sources(Chip0u PRIVATE ${CHIP_SOURCE_FILES} ${Chip0u_HEADER_FILES})
+target_sources(Chip0u PRIVATE ${CHIPOU_SOURCE_FILES} ${CHIPOU_HEADER_FILES})
 target_link_libraries(Chip0u PRIVATE vendor)
 target_include_directories(Chip0u PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -53,4 +55,4 @@ if (APPLE)
     target_link_libraries(Chip0u PRIVATE ${APPLE_FRAMEWORKS})
 endif ()
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CHIP_SOURCE_FILES} ${Chip0u_HEADER_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CHIPOU_SOURCE_FILES} ${CHIPOU_HEADER_FILES})

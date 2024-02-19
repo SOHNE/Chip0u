@@ -5,19 +5,22 @@
 #include <vector>
 
 #include "raylib.h"
-#include "imgui.h"
-#include "imgui_internal.h"
-#include "rlImGui.h"
-#include "ImGuiFileDialog.h"
 
 #include "chip8/Chip8.h"
 
-typedef std::pair<uint8_t, const char*> keypair_t;
-typedef std::map<KeyboardKey, keypair_t> keymapping_t;
-
+// Forward declaration
+class FrontEnd;
 
 class Application
 {
+public:
+    // Color palette
+    typedef struct ColorPalette
+    {
+        Color bg;
+        Color fg;
+    } ColorPalette;
+
 public:
     Application();
     ~Application();
@@ -32,21 +35,23 @@ public:
 
     bool IsRunning() const;
 
-private:
-    void DrawToolbarUI();
-    void DrawDebugUI();
-    void DrawKeysUI();
+    void SetPaused(bool bPaused);
+    void SetSpeed(int speed);
+    void SetKey(uint8_t key, bool bPressed);
+
+    void SetDisplayLines(bool bShow);
+    void SetLightTheme(bool bLight);
 
 private:
-    Chip8   *m_chip8 {nullptr};
+    friend class FrontEnd;
+
+    Chip8    *m_chip8 {nullptr};
+    FrontEnd *m_frontend {nullptr};
 
     uint8_t m_isRunning     : 1  {false};
     uint8_t m_isPaused      : 1  {false};
-    uint8_t m_showLines     : 1  {false};
+    uint8_t m_showLines     : 1  {true};
     uint8_t m_isLightTheme  : 1  {true};
-
-    ImGuiIO *m_io           {nullptr};
-    uint8_t m_showUI    : 1 {true};
 
     std::map<uint16_t, std::string> m_disassembled;
 
@@ -62,42 +67,25 @@ private:
     uint8_t m_speedIndex = 0;
 
     // Mapping of keys to CHIP8 keys
-    keymapping_t m_keyMapping =
+    std::map<KeyboardKey, uint8_t> m_keyMapping =
     {
-        {KEY_ONE,   {0x1, "1"}},
-        {KEY_TWO,   {0x2, "2"}},
-        {KEY_THREE, {0x3, "3"}},
-        {KEY_FOUR,  {0xC, "C"}},
-        {KEY_Q,     {0x4, "4"}},
-        {KEY_W,     {0x5, "5"}},
-        {KEY_E,     {0x6, "6"}},
-        {KEY_R,     {0xD, "D"}},
-        {KEY_A,     {0x7, "7"}},
-        {KEY_S,     {0x8, "8"}},
-        {KEY_D,     {0x9, "9"}},
-        {KEY_F,     {0xE, "E"}},
-        {KEY_Z,     {0xA, "A"}},
-        {KEY_X,     {0x0, "0"}},
-        {KEY_C,     {0xB, "B"}},
-        {KEY_V,     {0xF, "F"}}
+        {KEY_ONE,   0x1},
+        {KEY_TWO,   0x2},
+        {KEY_THREE, 0x3},
+        {KEY_FOUR,  0xC},
+        {KEY_Q,     0x4},
+        {KEY_W,     0x5},
+        {KEY_E,     0x6},
+        {KEY_R,     0xD},
+        {KEY_A,     0x7},
+        {KEY_S,     0x8},
+        {KEY_D,     0x9},
+        {KEY_F,     0xE},
+        {KEY_Z,     0xA},
+        {KEY_X,     0x0},
+        {KEY_C,     0xB},
+        {KEY_V,     0xF}
     };
-
-    // UI keymapping
-    std::vector<keypair_t> m_uiKeys =
-    {
-        {0x1, "1"}, {0x2, "2"}, {0x3, "3"}, {0xC, "C"},
-        {0x4, "4"}, {0x5, "5"}, {0x6, "6"}, {0xD, "D"},
-        {0x7, "7"}, {0x8, "8"}, {0x9, "9"}, {0xE, "E"},
-        {0xA, "A"}, {0x0, "0"}, {0xB, "B"}, {0xF, "F"}
-    };
-
-
-    // Color palette
-    typedef struct ColorPalette
-    {
-        Color bg;
-        Color fg;
-    } ColorPalette;
 
     // Themes
     ColorPalette m_themes[2] = {
@@ -113,7 +101,37 @@ private:
 inline bool
 Application::IsRunning() const
 {
-    return m_isRunning && !WindowShouldClose();
+    return !WindowShouldClose() && m_isRunning;
+}
+
+inline void
+Application::SetPaused(bool bPaused)
+{
+    m_isPaused = bPaused;
+}
+
+inline void
+Application::SetSpeed(int speed)
+{
+    m_speedIndex = speed;
+}
+
+inline void
+Application::SetKey(uint8_t key, bool bPressed)
+{
+    m_chip8->SetKey(key, bPressed);
+}
+
+inline void
+Application::SetDisplayLines(bool bShow)
+{
+    m_showLines = bShow;
+}
+
+inline void
+Application::SetLightTheme(bool bLight)
+{
+    m_isLightTheme = bLight;
 }
 
 #endif //CHIP0U_APPLICATION_H
