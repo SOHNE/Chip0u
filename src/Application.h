@@ -6,13 +6,14 @@
 
 #include "raylib.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "rlImGui.h"
 #include "ImGuiFileDialog.h"
 
 #include "chip8/Chip8.h"
 
-
-typedef std::map<uint32_t, std::pair<uint8_t, const char*>> keymapping_t;
+typedef std::pair<uint8_t, const char*> keypair_t;
+typedef std::map<KeyboardKey, keypair_t> keymapping_t;
 
 
 class Application
@@ -41,28 +42,27 @@ private:
 
     uint8_t m_isRunning     : 1  {false};
     uint8_t m_isPaused      : 1  {false};
-    uint8_t m_showLines     : 1  {true};
-    uint8_t m_isLightTheme  : 1  {false};
+    uint8_t m_showLines     : 1  {false};
+    uint8_t m_isLightTheme  : 1  {true};
 
-    ImGuiIO *m_io {nullptr};
-    uint8_t m_showUI : 1 {true};
-    uint8_t m_showKeys : 1 {false};
+    ImGuiIO *m_io           {nullptr};
+    uint8_t m_showUI    : 1 {true};
 
     std::map<uint16_t, std::string> m_disassembled;
 
     // Window sizes (normal and ui)
-    static constexpr uint32_t m_displayWidth { 64 * 10 };               // 640
-    static constexpr uint32_t m_displayHeight { ( 32 * 10 ) + 20 };     // 340 (+ 20 for the title bar)
+    static constexpr uint32_t m_displayWidth    { 64 * 10 };               // 640
+    static constexpr uint32_t m_displayHeight   { ( 32 * 10 ) + 20 };     // 340 (+ 20 for the title bar)
 
-    static constexpr uint32_t m_uiDisplacement { 420 };
-    static constexpr uint32_t m_windowWidthUI { m_displayWidth + m_uiDisplacement };    // 940 (+ 300 for the ui)
+    static constexpr uint32_t m_uiDisplacement  { 420 };
+    static constexpr uint32_t m_windowWidthUI   { m_displayWidth + m_uiDisplacement };    // 940 (+ 300 for the ui)
 
     // Execution speed map (cycles per frame)
     std::vector<uint32_t> m_speeds = {1, 2, 7, 10, 15, 20, 30, 60, 120, 240, 1000};
-    uint32_t m_speedIndex = 0;
+    uint8_t m_speedIndex = 0;
 
     // Mapping of keys to CHIP8 keys
-    keymapping_t keyMapping =
+    keymapping_t m_keyMapping =
     {
         {KEY_ONE,   {0x1, "1"}},
         {KEY_TWO,   {0x2, "2"}},
@@ -81,6 +81,16 @@ private:
         {KEY_C,     {0xB, "B"}},
         {KEY_V,     {0xF, "F"}}
     };
+
+    // UI keymapping
+    std::vector<keypair_t> m_uiKeys =
+    {
+        {0x1, "1"}, {0x2, "2"}, {0x3, "3"}, {0xC, "C"},
+        {0x4, "4"}, {0x5, "5"}, {0x6, "6"}, {0xD, "D"},
+        {0x7, "7"}, {0x8, "8"}, {0x9, "9"}, {0xE, "E"},
+        {0xA, "A"}, {0x0, "0"}, {0xB, "B"}, {0xF, "F"}
+    };
+
 
     // Color palette
     typedef struct ColorPalette
@@ -103,7 +113,7 @@ private:
 inline bool
 Application::IsRunning() const
 {
-    return !WindowShouldClose() && m_isRunning;
+    return m_isRunning && !WindowShouldClose();
 }
 
 #endif //CHIP0U_APPLICATION_H

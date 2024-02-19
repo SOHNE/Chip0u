@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include <iostream>
+
 std::string hex(uint32_t n, uint8_t d)
 {
     std::string s(d, '0');
@@ -52,11 +54,11 @@ Application::Setup()
 void
 Application::Input()
 {
-    for (const auto& [key, value] : keyMapping)
+    for (const auto& [key, value] : m_keyMapping)
     {
         uint8_t keyVal = value.first;
         if (IsKeyDown(key)) m_chip8->SetKey(keyVal, true);
-        else if (IsKeyUp(key)) m_chip8->SetKey(keyVal, false);
+        else if (IsKeyReleased(key)) m_chip8->SetKey(keyVal, false);
     }
 
     if (IsKeyPressed(KEY_F1))
@@ -104,14 +106,19 @@ void Application::Render()
     // Lines
     if (m_showLines)
     {
-        Color color = Fade(m_themes[m_isLightTheme].fg, 0.25f);
+        Color backgroundColor = Fade(m_themes[m_isLightTheme].bg, 0.25f);
+        Color foregroundColor = Fade(m_themes[m_isLightTheme].fg, 0.25f);
+
         for (uint16_t i = 0; i < 64; ++i)
         {
             if (i < 32)
             {
-                DrawLine(0, i * 10 + 20, 64 * 10, i * 10 + 20, color);
+                DrawLine(0, i * 10 + 20, 64 * 10, i * 10 + 20, backgroundColor);
+                DrawLine(0, i * 10 + 20, 64 * 10, i * 10 + 20, foregroundColor);
             }
-            DrawLine(i * 10, 0 + 20, i * 10, 32 * 10 + 20, color);
+
+            DrawLine(i * 10, 0 + 20, i * 10, 32 * 10 + 20, backgroundColor);
+            DrawLine(i * 10, 0 + 20, i * 10, 32 * 10 + 20, foregroundColor);
         }
     }
 
@@ -290,7 +297,7 @@ Application::DrawDebugUI()
         ImGui::SameLine();
         if (m_showLines)
         {
-            if (ImGui::Button(ICON_FA_SQUARE))
+            if (ImGui::Button(ICON_FA_CHESS_BOARD))
             {
                 m_showLines = false;
             }
@@ -301,7 +308,7 @@ Application::DrawDebugUI()
         }
         else
         {
-            if (ImGui::Button(ICON_FA_CHESS_BOARD))
+            if (ImGui::Button(ICON_FA_SQUARE))
             {
                 m_showLines = true;
             }
@@ -311,30 +318,30 @@ Application::DrawDebugUI()
             }
         }
 
-    // Show display lines
-    ImGui::SameLine();
-    if (m_isLightTheme)
-    {
-        if (ImGui::Button(ICON_FA_SUN))
+        // Show display lines
+        ImGui::SameLine();
+        if (m_isLightTheme)
         {
-            m_isLightTheme = false;
+            if (ImGui::Button(ICON_FA_SUN))
+            {
+                m_isLightTheme = false;
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            {
+                ImGui::SetTooltip("Toggle dark theme");
+            }
         }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        else
         {
-            ImGui::SetTooltip("Toggle dark theme");
+            if (ImGui::Button(ICON_FA_MOON))
+            {
+                m_isLightTheme = true;
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            {
+                ImGui::SetTooltip("Toggle light theme");
+            }
         }
-    }
-    else
-    {
-        if (ImGui::Button(ICON_FA_MOON))
-        {
-            m_isLightTheme = true;
-        }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-        {
-            ImGui::SetTooltip("Toggle light theme");
-        }
-    }
 
         // Cycles per frame
         ImGui::SameLine();
@@ -451,8 +458,17 @@ Application::DrawDebugUI()
                             ImGui::BeginTooltip();
                             ImGui::Text("Addr: %s", hex(i + j, 3).c_str());
                             ImGui::Separator();
-                            ImGui::Text("Decimal: %d", memory[i + j]);
-                            ImGui::Text("Char: %c", memory[i + j]);
+
+                            uint8_t value = memory[i + j];
+                            ImGui::Text("Decimal: %hhu", value);
+                            if (value >= 0x20 && value <= 0x7E)
+                            {
+                                ImGui::Text("Char: %c", value);
+                            }
+                            else
+                            {
+                                ImGui::Text("Char: ---");
+                            }
                             ImGui::EndTooltip();
                         }
 
@@ -470,18 +486,12 @@ Application::DrawDebugUI()
                 if (ImGui::BeginPopup("DebugHelper"))
                 {
                     ImGui::Text("0x0 - 0xF: Chip 8 keys");
+                    ImGui::Text("Press a key to activate");
                     ImGui::EndPopup();
                 }
 
-                auto keys = m_chip8->GetKeyboard();
-                for (int i = 0; i < 16; ++i)
-                {
-                    if (keys[i]) {
-                        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "0x%s: Pressed", hex(i, 1).c_str());
-                    } else {
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "0x%s: Released", hex(i, 1).c_str());
-                    }
-                }
+                DrawKeysUI();
+
                 ImGui::EndTabItem();
             }
 
@@ -528,37 +538,29 @@ Application::DrawDebugUI()
 void
 Application::DrawKeysUI()
 {
-#if 0
-    auto debugWindowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+    auto keys = m_chip8->GetKeyboard();
+    auto flags = ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_Repeat;
 
-    ImGui::SetNextWindowPos(ImVec2(64 * 10, 20), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(300, 340), ImGuiCond_Always);
-    ImGui::Begin("Keyboard", nullptr, debugWindowFlags);
+    uint8_t i = 0;
+    for (const auto &keypair : m_uiKeys)
+    {
+        ImVec4 buttonColor = keys[keypair.first] ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
 
-        int counter = 0;
-        for (auto & key : keyMapping)
-        {
-            if (ImGui::Button(key.second.second, ImVec2(50, 50)))
-            {
-                printf("Pressed: %s\n", key.second.second);
-                printf("Key: 0x%x\n", key.second.first);
-                m_chip8->SetKey(key.second.first, true);
-            }
+        bool isPressed = ImGui::ButtonEx(keypair.second, ImVec2(24, 24), flags);
+        m_chip8->SetKey(keypair.first, isPressed);
 
-            //counter++;
-            if (++counter % 4 != 0)
-            {
-                ImGui::SameLine();
-            }
-        }
-    ImGui::End();
-#endif
+        ImGui::PopStyleColor();
+
+        // Arrange buttons in a 4x4 grid
+        if (i++ % 4 != 3) ImGui::SameLine();
+    }
 }
 
 void
 Application::Destroy()
 {
+    m_isRunning = false;
     rlImGuiShutdown();
     CloseWindow();
 }
