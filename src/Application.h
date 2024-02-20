@@ -80,7 +80,7 @@ private:
 private:
     friend class FrontEnd;
 
-    emulation_cfg_t m_emulation_cfg {0.0f, 0.7f};
+    emulation_cfg_t m_emulation_cfg {0.01f, 0.7f};
 
     Chip8    *m_chip8 {nullptr};
     FrontEnd *m_frontend {nullptr};
