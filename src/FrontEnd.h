@@ -50,6 +50,8 @@ private:
     uint8_t m_showDebug : 1 {true};
     ImGuiIO *m_io {nullptr};
 
+    bool m_limitDisassemblyRange {true};
+
     // File dialog
     IGFD::FileDialogConfig m_dialogConfig;
 

@@ -373,7 +373,7 @@ FrontEnd::DrawMemory()
 {
     if (!ImGui::BeginTabItem("Memory")) return;
 
-    if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+    if (ImGui::TabItemButton(ICON_FA_CIRCLE_QUESTION, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
         ImGui::OpenPopup("DebugHelper");
 
     if (ImGui::BeginPopup("DebugHelper"))
@@ -447,7 +447,7 @@ FrontEnd::DrawInput()
 {
     if (!ImGui::BeginTabItem("Input")) return;
 
-    if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+    if (ImGui::TabItemButton(ICON_FA_CIRCLE_QUESTION, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
         ImGui::OpenPopup("DebugHelper");
 
     if (ImGui::BeginPopup("DebugHelper"))
@@ -484,9 +484,7 @@ FrontEnd::DrawDisassembly()
 {
     if (!ImGui::BeginTabItem("Disassembled")) return;
 
-    Chip8 *chip8 = m_app->m_chip8;
-
-    if (ImGui::TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
+    if (ImGui::TabItemButton(ICON_FA_CIRCLE_QUESTION, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
         ImGui::OpenPopup("DebugHelper");
 
     if (ImGui::BeginPopup("DebugHelper"))
@@ -494,22 +492,38 @@ FrontEnd::DrawDisassembly()
         ImGui::Text("Disassembled instructions");
         ImGui::Text("More human readable than raw memory");
         ImGui::Text("Shows the current instruction (PC) in red");
+        ImGui::Separator();
+        ImGui::Checkbox("Limit Disassembly Range", &m_limitDisassemblyRange);
+        if(ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Limit the disassembly range to the current PC");
+        }
         ImGui::EndPopup();
     }
 
-    std::string header = "addr  op" + std::string(5, ' ') + "instruction";
-    ImGui::TextColored(ImVec4(0.25f, 1.0f, 0.0f, 1.0f), "%s", header.c_str());
-    header = "----  ----   -----------";
-    ImGui::Text("%s", header.c_str());
-
-    for (const auto& [addr, inst] : m_app->m_disassembled)
     {
-        // Is the current instruction? Then color it red!
-        header = HEX(addr, 4) + "  " + inst;
-        ImVec4 color = (addr == chip8->GetPC())
-                        ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
-                        : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-        ImGui::TextColored(color, "%s", header.c_str());
+        std::string header = "addr   op" + std::string(5, ' ') + "instruction";
+        ImGui::TextColored(ImVec4(0.25f, 1.0f, 0.0f, 1.0f), "%s", header.c_str());
+        header = "-----  ----   -----------";
+        ImGui::Text("%s", header.c_str());
+    }
+
+    {
+        int pc = m_app->m_chip8->GetPC();
+        int start = std::max(0, pc - 10);
+        int end = std::min(4096, pc + 10);
+
+        for (const auto &[addr, inst]: m_app->m_disassembled)
+        {
+            // Limit the disassembly range to the current PC
+            if (m_limitDisassemblyRange && (addr < start || addr > end)) continue;
+
+            // Is the current instruction? Then color it red!
+            ImVec4 color = (addr == pc)
+                           ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+                           : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+            ImGui::TextColored(color, "%s", inst.c_str());
+        }
     }
     ImGui::EndTabItem();
 }

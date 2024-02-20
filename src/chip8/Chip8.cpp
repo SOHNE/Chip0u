@@ -597,44 +597,33 @@ Chip8::disassemble(uint16_t nStart, uint16_t nStop) const
         instr = instruction_t(m_c8.RAM[addr] << 8 | m_c8.RAM[addr + 1]); addr += 2;
         uint16_t masked_opcode = GetMaskedOpcode(instr.OP);
 
-        sInst = hex(instr.OP, 4) + std::string(3, ' ');
+        sInst = "$" + hex(line_addr, 4) + ": ";
+        sInst += hex(instr.OP, 4) + std::string(3, ' ');
 
-        auto it = m_lookup.find(masked_opcode);
+        const auto it = m_lookup.find(masked_opcode);
         if (it != m_lookup.end())
         {
             sInst += it->second.name;
 
-            if (it->second.function == &Chip8::OP_00E0 || it->second.function == &Chip8::OP_00EE)
+            switch ((instr.OP & 0xF000) >> 12)
             {
-                // No additional info
-            }
-            else if (it->second.function == &Chip8::OP_1NNN || it->second.function == &Chip8::OP_2NNN || it->second.function == &Chip8::OP_ANNN || it->second.function == &Chip8::OP_BNNN)
-            {
-                sInst += " $" + hex(instr.NNN, 3);
-            }
-            else if (it->second.function == &Chip8::OP_3XNN || it->second.function == &Chip8::OP_4XNN || it->second.function == &Chip8::OP_6XNN || it->second.function == &Chip8::OP_7XNN || it->second.function == &Chip8::OP_CXNN)
-            {
-                sInst += " V" + hex(instr.X, 1) + ", #" + hex(instr.NN, 2);
-            }
-            else if (it->second.function == &Chip8::OP_5XY0 || it->second.function == &Chip8::OP_9XY0)
-            {
-                sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1);
-            }
-            else if (it->second.function == &Chip8::OP_8XY0 || it->second.function == &Chip8::OP_8XY1 || it->second.function == &Chip8::OP_8XY2 || it->second.function == &Chip8::OP_8XY3 || it->second.function == &Chip8::OP_8XY4 || it->second.function == &Chip8::OP_8XY5 || it->second.function == &Chip8::OP_8XY6 || it->second.function == &Chip8::OP_8XY7 || it->second.function == &Chip8::OP_8XYE)
-            {
-                sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1);
-            }
-            else if (it->second.function == &Chip8::OP_DXYN)
-            {
-                sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1) + ", #" + hex(instr.N, 1);
-            }
-            else if (it->second.function == &Chip8::OP_FX29 || it->second.function == &Chip8::OP_FX33)
-            {
-                sInst += " V" + hex(instr.X, 1);
-            }
-            else if (it->second.function == &Chip8::OP_FX55 || it->second.function == &Chip8::OP_FX65)
-            {
-                sInst += " V" + hex(instr.X, 1);
+                case 0x0: break;
+                case 0x1:
+                case 0x2:
+                case 0xA:
+                case 0xB: sInst += " $" + hex(instr.NNN, 3); break;
+                case 0x3:
+                case 0x4:
+                case 0x6:
+                case 0x7:
+                case 0xC: sInst += " V" + hex(instr.X, 1) + ", #" + hex(instr.NN, 2); break;
+                case 0x5:
+                case 0x9:
+                case 0x8: sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1); break;
+                case 0xD: sInst += " V" + hex(instr.X, 1) + ", V" + hex(instr.Y, 1) + ", #" + hex(instr.N, 1); break;
+                case 0xE:
+                case 0xF: sInst += " V" + hex(instr.X, 1); break;
+                default: break;
             }
         }
         else // Unknown opcode
