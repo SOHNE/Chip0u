@@ -10,7 +10,9 @@ This project, Chip0u, is a learning-oriented endeavor into the world of CHIP-8 e
 
 This project is a fun and complex learning experience for me. It's all about getting to know more about how interpreters and emulators work.
 
-Taking inspiration from the design and logic of existing CHIP-8 (and others) emulators, _Chip0u_ aims nothing.
+Taking inspiration from the design and logic of existing CHIP-8 (and others) emulators, _Chip0u_ aims only the simplicity.
+
+[![Live demo](https://img.shields.io/badge/-Live%20Demo-8f60fc?style=for-the-badge&logo=glitch&logoColor=white&colorA=392467&colorB=7E30E1)](https://chip0u.glitch.me/)
 
 ## Building
 
