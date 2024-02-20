@@ -1,3 +1,25 @@
+// MIT License
+
+// Copyright (c) 2024 Leandro Peres, aka "zschzen"
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #ifndef CHIP0U_CHIP8_H
 #define CHIP0U_CHIP8_H
 
@@ -15,6 +37,7 @@
 #define TOTAL_RAM       4096
 #define TOTAL_REGISTERS 16
 #define STACK_SIZE      16
+#define KEYPAD_SIZE     16
 
 #define DISPLAY_WIDTH   64
 #define DISPLAY_HEIGHT  32
@@ -64,16 +87,16 @@ public:
 
     typedef struct chip8_t
     {
-        uint8_t     V[16];             // V0 - VF
-        uint8_t     RAM[TOTAL_RAM];    // 4KB RAM (0x000 - 0xFFF)
-        uint16_t    PC;                // Program Counter
-        uint16_t    I;                 // Index Register
-        uint8_t     DT, ST;            // Delay Timer, Sound Timer
-        uint16_t    STACK[16];         // Stack
-        uint8_t     SP;                // Stack Pointer
-        uint8_t     KP[16];            // Keypad
-        bool        DP[DISPLAY_SIZE];  // Display
-        bool        DF;                // Draw Flag
+        uint8_t     V[TOTAL_REGISTERS]; // V0 - VF
+        uint8_t     RAM[TOTAL_RAM];     // 4KB RAM (0x000 - 0xFFF)
+        uint16_t    PC;                 // Program Counter
+        uint16_t    I;                  // Index Register
+        uint8_t     DT, ST;             // Delay Timer, Sound Timer
+        uint16_t    STACK[STACK_SIZE];  // Stack
+        uint8_t     SP;                 // Stack Pointer
+        uint8_t     KP[KEYPAD_SIZE];    // Keypad
+        bool        DP[DISPLAY_SIZE];   // Display
+        bool        DF;                 // Draw Flag
     } chip8_t;
 
     /*
