@@ -373,28 +373,27 @@ FrontEnd::DrawMemory()
 {
     if (!ImGui::BeginTabItem("Memory")) return;
 
+    static char start[4] = "000";
+    static char end[4] = "FFF";
+
     if (ImGui::TabItemButton(ICON_FA_CIRCLE_QUESTION, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
         ImGui::OpenPopup("DebugHelper");
 
     if (ImGui::BeginPopup("DebugHelper"))
     {
-        ImGui::Text("Memory range: 000 - FFF");
-        ImGui::Text("000-1FF - Chip 8 interpreter (contains font set in emu)");
-        ImGui::Text("050-0A0 - Used for the built in 4x5 pixel font set (0-F)");
-        ImGui::Text("200-FFF - Program ROM and work RAM");
+            ImGui::Text("Memory range: 000 - FFF");
+            ImGui::Text("000-1FF - Chip 8 interpreter (contains font set in emu)");
+            ImGui::Text("050-0A0 - Used for the built in 4x5 pixel font set (0-F)");
+            ImGui::Text("200-FFF - Program ROM and work RAM");
+            ImGui::Separator();
+            ImGui::Text("Range: ");
+            ImGui::SetNextItemWidth((m_app->m_uiDisplacement * 0.5F) - 150);
+            ImGui::InputText("Start", start, IM_ARRAYSIZE(start), ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth((m_app->m_uiDisplacement * 0.5F) - 150);
+            ImGui::InputText("End", end, IM_ARRAYSIZE(end), ImGuiInputTextFlags_CharsHexadecimal);
         ImGui::EndPopup();
     }
-
-    static char start[4] = "000";
-    static char end[4] = "FFF";
-
-    ImGui::Text("Range: ");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth((m_app->m_uiDisplacement * 0.5F) - 150);
-    ImGui::InputText("Start", start, IM_ARRAYSIZE(start), ImGuiInputTextFlags_CharsHexadecimal);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth((m_app->m_uiDisplacement * 0.5F) - 150);
-    ImGui::InputText("End", end, IM_ARRAYSIZE(end), ImGuiInputTextFlags_CharsHexadecimal);
 
     uint32_t start_val = strlen(start) != 0 ? std::stoul(start, nullptr, 16) : 0;
     uint32_t end_val = strlen(end) != 0 ? std::stoul(end, nullptr, 16) : 4096;
@@ -402,8 +401,6 @@ FrontEnd::DrawMemory()
     // Clamp the values to valid memory range
     start_val = std::max(0u, std::min(start_val, 4096u));
     end_val = std::max(0u, std::min(end_val, 4096u));
-
-    ImGui::Separator();
 
     auto memory = m_app->m_chip8->GetMemory();
     for (uint32_t i = start_val; i < end_val; i += 16)
@@ -504,8 +501,6 @@ FrontEnd::DrawDisassembly()
     {
         std::string header = "addr   op" + std::string(5, ' ') + "instruction";
         ImGui::TextColored(ImVec4(0.25f, 1.0f, 0.0f, 1.0f), "%s", header.c_str());
-        header = "-----  ----   -----------";
-        ImGui::Text("%s", header.c_str());
     }
 
     {
@@ -522,6 +517,7 @@ FrontEnd::DrawDisassembly()
             ImVec4 color = (addr == pc)
                            ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
                            : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
             ImGui::TextColored(color, "%s", inst.c_str());
         }
     }
