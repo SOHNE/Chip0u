@@ -191,9 +191,9 @@ FrontEnd::DrawDebug()
 
         if (ImGui::BeginTabBar("DebuggerTabs", ImGuiTabBarFlags_None))
         {
+            DrawDisassembly();
             DrawMemory();
             DrawInput();
-            DrawDisassembly();
 
             ImGui::EndTabBar();
         }
@@ -209,6 +209,7 @@ FrontEnd::DrawControls()
                             ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
     Chip8 *chip8 = m_app->m_chip8;
+    std::string menu_action{};
 
     // New window for the buttons
     ImGui::SetNextWindowPos(ImVec2(64 * 10, 20), ImGuiCond_Always);
@@ -253,7 +254,7 @@ FrontEnd::DrawControls()
         ImGui::SameLine();
         if (ImGui::Button(ICON_FA_ROTATE))
         {
-            chip8->LoadGame(m_app->m_latestFile.c_str());
+            m_app->Reset();
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         {
@@ -310,17 +311,66 @@ FrontEnd::DrawControls()
             }
         }
 
-        // Cycles per frame
         ImGui::SameLine();
-        if (ImGui::BeginCombo("Speed", std::to_string(m_app->m_speeds[m_app->m_speedIndex]).c_str()))
+        if (ImGui::Button(ICON_FA_ELLIPSIS))
+        {
+            menu_action = "ExtraControls";
+        }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        {
+            ImGui::SetTooltip("Extra controls");
+        }
+
+        {
+            if (menu_action == "ExtraControls")
+            {
+                ImGui::OpenPopup("Extra Controls");
+            }
+
+            // appear just below the button
+            ImGui::SetNextWindowPos(ImVec2(64 * 10, 70), ImGuiCond_Appearing);
+            if (ImGui::BeginPopupModal("Extra Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                DrawExtraControls();
+                ImGui::EndPopup();
+            }
+        }
+
+    ImGui::End();
+}
+
+
+// As a modal centered popup window, manipulates Application::emulation_cfg_t
+void
+FrontEnd::DrawExtraControls()
+{
+    ImGui::SetItemDefaultFocus();
+
+        ImGui::Text("Emulation Configuration");
+        ImGui::Separator();
+
+        ImGui::SliderFloat("Precision", &m_app->m_emulation_cfg.precision, 0.0f, 1.0f, "%.2f");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Precision of the lerp function");
+        }
+
+        ImGui::SliderFloat("Lerp Duration", &m_app->m_emulation_cfg.lerp_duration, 0.1f, 1.0f, "%.2f");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Duration of the lerp effect");
+        }
+
+        // Cycles per frame
+        if (ImGui::BeginCombo("Speed", std::to_string(m_app->m_speeds[m_app->m_emulation_cfg.speed]).c_str()))
         {
             for (int i = 0; i < m_app->m_speeds.size(); ++i)
             {
-                bool isSelected = (m_app->m_speedIndex == i);
+                bool isSelected = (m_app->m_emulation_cfg.speed == i);
                 std::string speeds = std::to_string(m_app->m_speeds[i]) + " cycles/frame";
                 if (ImGui::Selectable(speeds.c_str(), isSelected))
                 {
-                    m_app->m_speedIndex = i;
+                    m_app->m_emulation_cfg.speed = i;
                 }
                 if (isSelected)
                 {
@@ -334,7 +384,11 @@ FrontEnd::DrawControls()
             ImGui::SetTooltip("Cycles per frame");
         }
 
-    ImGui::End();
+        // Close button
+        if (ImGui::Button("Close"))
+        {
+            ImGui::CloseCurrentPopup();
+        }
 }
 
 void

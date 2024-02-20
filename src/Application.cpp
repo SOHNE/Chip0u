@@ -51,6 +51,9 @@ Application::LoadFile(const char *filename)
     m_latestFile = std::string(filename);
     m_chip8->LoadGame(filename);
     m_disassembled = m_chip8->GetDisassembled();
+
+    // Reset PixelColor
+    for (auto & p : PixelColor) p = m_themes[m_isLightTheme].bg;
 }
 
 void
@@ -85,11 +88,22 @@ Application::Update()
 {
     if (!m_isPaused)
     {
-        for (int i = 0; i < m_speeds[m_speedIndex]; ++i)
+        for (int i = 0; i < m_speeds[m_emulation_cfg.speed]; ++i)
         {
             m_chip8->Clock();
         }
     }
+}
+
+void
+Application::Reset()
+{
+    m_chip8->Reset();
+    m_chip8->LoadGame(m_latestFile.c_str());
+    m_disassembled = m_chip8->GetDisassembled();
+
+    // Reset PixelColor
+    for (auto & p : PixelColor) p = m_themes[m_isLightTheme].bg;
 }
 
 void Application::Render()
@@ -103,14 +117,39 @@ void Application::Render()
         // CHIP-8 display
         {
             auto display = m_chip8->GetDisplay();
+
             for (int y = 0; y < 32; ++y)
             {
                 for (int x = 0; x < 64; ++x)
                 {
-                    if (display[y * 64 + x] != 1) continue;
+                    // Get the current color of the pixel
+                    int32_t i = y * 64 + x;
+                    Color currentColor = PixelColor[i];
 
-                    // Add an offset to the y-coordinate to account for the toolbar height
-                    DrawRectangle(x * 10, y * 10 + 20, 10, 10, m_themes[m_isLightTheme].fg);
+                    // Determine the target color based on the display data
+                    bool isPixelOn = display[i];
+                    Color targetColor = isPixelOn
+                                        ? m_themes[m_isLightTheme].fg
+                                        : m_themes[m_isLightTheme].bg;
+
+                    // Check if the current color is different from the target color
+                    bool isColorDifferent = currentColor.r != targetColor.r
+                                            || currentColor.g != targetColor.g
+                                            || currentColor.b != targetColor.b
+                                            || currentColor.a != targetColor.a;
+
+                    // Only calculate the new color if the current color is different from the target color
+                    if (isColorDifferent)
+                    {
+                        // Define the lerp factor (-t/log2(precision))
+                        float lerpFactor = -m_emulation_cfg.lerp_duration / log2f(m_emulation_cfg.precision);
+
+                        // Calculate the new color
+                        PixelColor[i] = ColorLerp(currentColor, targetColor, lerpFactor);
+                    }
+
+                    // Draw the rectangle with the new color
+                    DrawRectangle(x * 10, y * 10 + 20, 10, 10, PixelColor[i]);
                 }
             }
         }

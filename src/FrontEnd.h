@@ -58,6 +58,7 @@ protected:
 
     void DrawDebug();
     void DrawControls();
+    void DrawExtraControls();
     void DrawStack();
     void DrawRegisters();
     void DrawDataRegisters();

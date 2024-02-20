@@ -542,7 +542,7 @@ Chip8::OP_FX33()
 {
     // Store BCD representation of Vx in memory locations I, I+1, and I+2
     uint8_t Vx = m_c8.V[m_instr.X];
-    m_c8.RAM[m_c8.I]     = Vx / 100;
+    m_c8.RAM[m_c8.I + 0] = Vx / 100;
     m_c8.RAM[m_c8.I + 1] = (Vx / 10) % 10;
     m_c8.RAM[m_c8.I + 2] = (Vx % 100) % 10;
 }
