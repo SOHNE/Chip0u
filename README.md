@@ -40,8 +40,7 @@ Contributions to Chip0u are welcome. Please feel free to fork the repository and
 
 MIT License
 
-Copyright (c) 2024 SOHNE
-Copyright (c) 2024 Leandro Peres, aka "zschzen"
+Copyright (c) 2024 SOHNE; Leandro Peres, aka "zschzen"
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
