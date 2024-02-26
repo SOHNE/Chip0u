@@ -26,7 +26,7 @@ set_target_properties(Chip0u PROPERTIES
 set(ROMS_DIR ${CMAKE_SOURCE_DIR}/roms)
 if( EMSCRIPTEN )
     if (EXISTS ${ROMS_DIR})
-        set_target_properties(Chip0u PROPERTIES LINK_FLAGS "-s DEMANGLE_SUPPORT=1 --preload-file ${ROMS_DIR}@/roms --bind --use-preload-plugins")
+        set_target_properties(Chip0u PROPERTIES LINK_FLAGS "--preload-file ${ROMS_DIR}@/roms --bind --use-preload-plugins")
     else()
         message(WARNING "No roms folder found. Please add a roms folder to the root of the project.")
     endif ()
@@ -34,7 +34,7 @@ if( EMSCRIPTEN )
 
     # Tell Emscripten to build an example.html file.
     # TODO: Add user drag and drop support (-s FORCE_FILESYSTEM=1)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
     set_target_properties(Chip0u PROPERTIES SUFFIX ".html")
     set_target_properties(Chip0u PROPERTIES OUTPUT_NAME "index")
