@@ -402,11 +402,11 @@ FrontEnd::DrawRegisters()
     ImGui::SetNextWindowPos(ImVec2(64 * 10, 70), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(m_app->m_uiDisplacement * 0.4F, 120), ImGuiCond_Always);
     ImGui::Begin("Registers", nullptr, debugWindowFlags);
-        ImGui::Text("PC: 0x%s\t[%d]", HEX(chip8->GetPC(), 3).c_str(), chip8->GetPC());
-        ImGui::Text("I : 0x%s\t[%d]", HEX(chip8->GetI(), 3).c_str(), chip8->GetI());
-        ImGui::Text("SP: 0x%s\t[%d]", HEX(chip8->GetSP(), 1).c_str(), chip8->GetSP());
-        ImGui::Text("DT: 0x%s\t[%d]", HEX(chip8->GetDelayTimer(), 1).c_str(), chip8->GetDelayTimer());
-        ImGui::Text("ST: 0x%s\t[%d]", HEX(chip8->GetSoundTimer(), 1).c_str(), chip8->GetSoundTimer());
+        ImGui::Text("PC: #%s\t[%d]", HEX(chip8->GetPC(), 3).c_str(), chip8->GetPC());
+        ImGui::Text("I : #%s\t[%d]", HEX(chip8->GetI(), 3).c_str(), chip8->GetI());
+        ImGui::Text("SP: #%s\t[%d]", HEX(chip8->GetSP(), 1).c_str(), chip8->GetSP());
+        ImGui::Text("DT: #%s\t[%d]", HEX(chip8->GetDelayTimer(), 1).c_str(), chip8->GetDelayTimer());
+        ImGui::Text("ST: #%s\t[%d]", HEX(chip8->GetSoundTimer(), 1).c_str(), chip8->GetSoundTimer());
     ImGui::End();
 }
 
@@ -422,7 +422,7 @@ FrontEnd::DrawStack()
         auto stack = m_app->m_chip8->GetStack();
         for (int i = 0; i < 16; ++i)
         {
-            ImGui::Text("0x%s: 0x%s", HEX(i, 1).c_str(), HEX(stack[i], 3).c_str());
+            ImGui::Text("%s: #%s", HEX(i, 1).c_str(), HEX(stack[i], 3).c_str());
         }
     ImGui::End();
 }
@@ -439,7 +439,7 @@ FrontEnd::DrawDataRegisters()
         for (int i = 0; i < 16; ++i)
         {
             uint8_t v = m_app->m_chip8->GetV()[i];
-            ImGui::Text("V%X: 0x%s [%d]", i, HEX(v, 2).c_str(), v);
+            ImGui::Text("V%X: #%s [%d]", i, HEX(v, 2).c_str(), v);
         }
     ImGui::End();
 }
@@ -591,7 +591,7 @@ FrontEnd::DrawDisassembly()
 
             // Is the current instruction? Then color it red!
             ImVec4 color = (addr == pc)
-                           ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+                           ? (m_app->m_isPaused) ? ImVec4(1.0f, 0.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 0.0f, 1.0f)
                            : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
             ImGui::TextColored(color, "%s", inst.c_str());
